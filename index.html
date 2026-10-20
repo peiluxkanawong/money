@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Money">
+<meta name="theme-color" content="#085041">
+<title>Money</title>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --soft:#F2F1EC; --line:#E2E0D8; --text:#2C2C2A; --muted:#8A8983;
+  --green:#085041; --green2:#1D9E75; --pick:#E1F5EE; --pickText:#085041; --pickLine:#5DCAA5;
+  --ae:#9900FF; --aeBg:#F1E6FF; --sh:#B36B00; --shBg:#FFF1D6; --red:#CC0000;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#121212; --soft:#1F1F1E; --line:#33332F; --text:#F1F0EA; --muted:#8F8E88;
+         --pick:#0B3D31; --pickText:#9FE1CB; --pickLine:#1D9E75; --aeBg:#2A1745; --shBg:#3A2A0A; }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'Kanit',system-ui,sans-serif;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+body{display:flex;flex-direction:column;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 14px calc(env(safe-area-inset-bottom) + 10px);height:100dvh;overflow:hidden}
+button{font-family:inherit;color:inherit}
+
+/* month card: one month at a time, swipe left / right */
+#month{flex:none;position:relative;background:var(--green);color:#fff;border-radius:16px;padding:10px 40px;display:flex;align-items:center;justify-content:space-between;touch-action:pan-y}
+#month .nav{position:absolute;top:0;bottom:0;width:36px;display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.7;background:none;border:none;color:#fff}
+#month .nav.l{left:0} #month .nav.r{right:0}
+#mLabel{font-size:15px;opacity:.9}
+#mTotal{font-size:24px;font-weight:500;line-height:1.2}
+#mSplit{text-align:right;font-size:12px;line-height:1.6;opacity:.95}
+#bills{margin-top:4px;font-size:11px;border:1px solid rgba(255,255,255,.5);border-radius:10px;padding:2px 8px;background:none;color:#fff}
+#pending{position:absolute;top:-6px;right:10px;background:#BA7517;color:#fff;font-size:10px;border-radius:8px;padding:1px 7px;display:none}
+#demo{position:absolute;top:-6px;left:10px;background:#888;color:#fff;font-size:10px;border-radius:8px;padding:1px 7px;display:none}
+
+#amountBox{flex:none;text-align:center}
+#amount{font-size:44px;font-weight:500;line-height:1.1}
+#amount small{font-size:22px;color:var(--muted);font-weight:400}
+#per{font-size:12px;color:#BA7517;height:16px}
+
+/* card + installment: one value, swipe up / down */
+.pickers{flex:none;display:flex;gap:8px}
+.picker{position:relative;flex:1;height:58px;border-radius:14px;background:var(--soft);display:flex;align-items:center;justify-content:center;touch-action:pan-x}
+.picker .cap{position:absolute;top:5px;left:12px;font-size:10px;color:var(--muted)}
+.picker .val{font-size:19px;font-weight:500}
+.picker .ar{position:absolute;right:6px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center}
+.picker .ar button{border:none;background:none;color:var(--muted);font-size:15px;height:24px;width:28px;padding:0}
+
+.strip{flex:none;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.strip::-webkit-scrollbar{display:none}
+.cat{flex:none;width:68px;height:66px;border-radius:16px;border:1px solid var(--line);background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:var(--muted)}
+.cat i{font-size:27px}
+.cat span{font-size:9px;max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat.on{background:var(--pick);color:var(--pickText);border-color:var(--pickLine)}
+.tag{flex:none;height:34px;padding:0 13px;border-radius:17px;border:1px solid var(--line);background:none;font-size:12px;color:var(--muted);white-space:nowrap}
+.tag.on{background:var(--pick);color:var(--pickText);border-color:var(--pickLine)}
+.tag.est{font-style:italic}
+.add{border-style:dashed}
+#chosen{flex:none;display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border-radius:10px;background:var(--soft);font-size:13px}
+#chosen span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#chosen button{border:none;background:none;color:var(--muted);font-size:16px;padding:0}
+
+#who{flex:none;display:flex;background:var(--soft);border-radius:12px;padding:3px}
+#who button{flex:1;height:44px;border:none;background:none;border-radius:10px;font-size:15px;color:var(--muted)}
+#who button.on[data-w="PEI"]{background:var(--bg);color:var(--text)}
+#who button.on[data-w="AE"]{background:var(--aeBg);color:var(--ae)}
+#who button.on[data-w="PEI+AE"]{background:var(--shBg);color:var(--sh)}
+
+#keys{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:8px}
+#keys button{border:none;border-radius:14px;background:var(--soft);font-size:26px}
+#keys .fn{color:var(--muted);font-size:21px}
+#keys .save{background:var(--green2);color:#fff;font-size:21px;font-weight:500}
+#keys button:active{filter:brightness(.92)}
+
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 18px);transform:translateX(-50%);background:var(--text);color:var(--bg);padding:9px 16px;border-radius:12px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:88%;text-align:center}
+#toast.show{opacity:.95}
+</style>
+</head>
+<body>
+
+<div id="month">
+  <button class="nav l" id="prev" aria-label="Previous month"><i class="ti ti-chevron-left"></i></button>
+  <div><div id="mLabel">Oct-26</div><div id="mTotal">0.00</div></div>
+  <div id="mSplit"><div>AE <span id="mAe">0.00</span></div><div>PEI <span id="mPei">0.00</span></div>
+    <button id="bills"><i class="ti ti-receipt"></i> บิลรายเดือน</button></div>
+  <button class="nav r" id="next" aria-label="Next month"><i class="ti ti-chevron-right"></i></button>
+  <span id="pending"></span><span id="demo">DEMO</span>
+</div>
+
+<div id="amountBox"><div id="amount"><small>฿</small> 0</div><div id="per"></div></div>
+
+<div class="pickers">
+  <div class="picker" id="pCard"><span class="cap">บัตร</span><span class="val" id="vCard">—</span>
+    <span class="ar"><button data-d="-1" aria-label="Previous card"><i class="ti ti-chevron-up"></i></button><button data-d="1" aria-label="Next card"><i class="ti ti-chevron-down"></i></button></span></div>
+  <div class="picker" id="pInst" style="flex:.75"><span class="cap">ผ่อน</span><span class="val" id="vInst">ไม่ผ่อน</span>
+    <span class="ar"><button data-d="-1" aria-label="Fewer months"><i class="ti ti-chevron-up"></i></button><button data-d="1" aria-label="More months"><i class="ti ti-chevron-down"></i></button></span></div>
+</div>
+
+<div class="strip" id="cats"></div>
+<div class="strip" id="tags"></div>
+<div id="chosen"><i class="ti ti-tag" style="color:var(--muted)"></i><span id="chosenText"></span><button id="clear" aria-label="Clear tags"><i class="ti ti-x"></i></button></div>
+
+<div id="who"><button data-w="PEI" class="on">PEI</button><button data-w="AE">AE</button><button data-w="PEI+AE">PEI+AE</button></div>
+
+<div id="keys"></div>
+<div id="toast"></div>
+
+<script>
+/* ---------- config: #api=<web app url>&key=<secret> (kept on this phone) ---------- */
+const CFG_KEY = 'money.cfg', DATA_KEY = 'money.data', QUEUE_KEY = 'money.queue', STATE_KEY = 'money.state';
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+};
+(function readHash() {
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get('api') && h.get('key')) store.set(CFG_KEY, { api: h.get('api'), key: h.get('key') });
+})();
+const cfg = store.get(CFG_KEY, null);
+const DEMO = !cfg;
+
+const ICONS = { MEAL:'tools-kitchen-2', SHOPPING:'shopping-bag', MONTHLY:'calendar-repeat', HOME:'home',
+  'TOBA&SHOTA':'cat', HEALTH:'stethoscope', KIDS:'baby-carriage', TRIP:'plane', OFFICE:'briefcase',
+  DEBT:'cash', FAMILY:'users', CARD:'credit-card', GIFT:'gift', TRANSPORT:'car', FOOD:'tools-kitchen-2' };
+const INST = [1, 3, 4, 6, 10, 12, 18, 24, 36];
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const label = i => MON[i % 12] + '-' + String(Math.floor(i / 12)).slice(2);
+const index = s => { const m = /^([A-Za-z]{3})-(\d\d)$/.exec(s); return m ? (2000 + +m[2]) * 12 + MON.indexOf(m[1]) : null; };
+const money = v => Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const DEMO_DATA = {
+  cards: [['UOB - TMRW (7607)','TMRW'],['TTB - SO SMART (0043)','SO SMART'],['KBANK - LINE (0533)','LINE'],['SCB - JCB (5769)','JCB'],
+          ['KRUNGSRI - CENTRAL (5531)','CENTRAL'],['KRUNGSRI - HOMEPRO (4450)','HOMEPRO'],['UOB - CASH PLUS (8144)','CASH PLUS'],['KBANK - EXPRESS CASH (5813)','EXPRESS CASH']]
+          .map(([name, short]) => ({ name, short })),
+  cats: ['MEAL','TOBA&SHOTA','MONTHLY','HEALTH','SHOPPING','OFFICE','KIDS','DEBT','HOME','TRIP','FAMILY','CARD'],
+  tags: ['GRAB','LINEMAN','KASTY','PURRFECT CAT HOSPITAL','MEA','EST','SHOPEE','TRUE CORP.','NETFLIX','CLAUDE'],
+  totals: { 'Sep-26':[54109.44,16659.64,37449.80], 'Oct-26':[74856.57,16931.39,57925.18], 'Nov-26':[85845.32,21579.67,64265.66],
+            'Dec-26':[62884.66,18301.67,44583.00], 'Jan-27':[52178.99,15701.67,36477.32] },
+  now: label(new Date().getFullYear() * 12 + new Date().getMonth()),
+};
+
+let data = store.get(DATA_KEY, null) || DEMO_DATA;
+let queue = store.get(QUEUE_KEY, []);
+const saved = store.get(STATE_KEY, {});
+const st = { month: data.now, card: saved.card || null, inst: 0, cat: saved.cat || null, who: 'PEI', tags: [], amt: '0' };
+
+const $ = id => document.getElementById(id);
+let toastTimer;
+function toast(msg) { $('toast').textContent = msg; $('toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 2200); }
+
+/* ---------- months ---------- */
+function monthList() {
+  const now = index(data.now);
+  let last = now + 6;
+  Object.keys(data.totals || {}).forEach(k => { const i = index(k); if (i !== null && i > last) last = i; });
+  const out = []; for (let i = now - 3; i <= last; i++) out.push(label(i)); return out;
+}
+function shiftMonth(d) {
+  const list = monthList(), i = list.indexOf(st.month);
+  const j = Math.max(0, Math.min(list.length - 1, (i < 0 ? list.indexOf(data.now) : i) + d));
+  if (list[j] !== st.month) { st.month = list[j]; drawMonth(); }
+}
+function drawMonth() {
+  const t = (data.totals || {})[st.month] || [0, 0, 0];
+  $('mLabel').textContent = st.month;
+  $('mTotal').textContent = money(t[0]);
+  $('mAe').textContent = money(t[1]);
+  $('mPei').textContent = money(t[2]);
+  $('pending').style.display = queue.length ? 'block' : 'none';
+  $('pending').textContent = 'รอส่ง ' + queue.length;
+  $('demo').style.display = DEMO ? 'block' : 'none';
+}
+$('prev').onclick = () => shiftMonth(-1);
+$('next').onclick = () => shiftMonth(1);
+swipe($('month'), (dx, dy) => { if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) shiftMonth(dx < 0 ? 1 : -1); });
+
+/* ---------- card + installment pickers ---------- */
+function cardList() { return data.cards || []; }
+function drawPickers() {
+  const cards = cardList();
+  if (!cards.find(c => c.name === st.card)) st.card = cards.length ? cards[0].name : '';
+  const c = cards.find(c => c.name === st.card);
+  $('vCard').textContent = c ? c.short : '—';
+  $('vInst').textContent = INST[st.inst] === 1 ? 'ไม่ผ่อน' : INST[st.inst] + ' เดือน';
+}
+function stepCard(d) { const cards = cardList(); if (!cards.length) return;
+  const i = cards.findIndex(c => c.name === st.card); st.card = cards[(i + d + cards.length) % cards.length].name; drawPickers(); drawAmount(); }
+function stepInst(d) { st.inst = Math.max(0, Math.min(INST.length - 1, st.inst + d)); drawPickers(); drawAmount(); }
+document.querySelectorAll('#pCard .ar button').forEach(b => b.onclick = () => stepCard(+b.dataset.d));
+document.querySelectorAll('#pInst .ar button').forEach(b => b.onclick = () => stepInst(+b.dataset.d));
+swipe($('pCard'), (dx, dy) => { if (Math.abs(dy) > 20 && Math.abs(dy) > Math.abs(dx)) stepCard(dy < 0 ? 1 : -1); });
+swipe($('pInst'), (dx, dy) => { if (Math.abs(dy) > 20 && Math.abs(dy) > Math.abs(dx)) stepInst(dy < 0 ? 1 : -1); });
+
+/* ---------- categories + tags ---------- */
+function drawCats() {
+  const cats = data.cats || [];
+  if (!st.cat || cats.indexOf(st.cat) < 0) st.cat = cats[0] || '';
+  $('cats').innerHTML = cats.map(c => `<button class="cat ${c === st.cat ? 'on' : ''}" data-v="${esc(c)}"><i class="ti ti-${ICONS[c] || 'circle-dot'}"></i><span>${esc(c)}</span></button>`).join('')
+    + '<button class="cat add" id="addCat" aria-label="New category"><i class="ti ti-plus"></i><span>NEW</span></button>';
+  $('cats').querySelectorAll('.cat[data-v]').forEach(b => b.onclick = () => { st.cat = b.dataset.v; drawCats(); });
+  $('addCat').onclick = () => { const v = (prompt('CATEGORY ใหม่') || '').trim().toUpperCase(); if (!v) return;
+    data.cats = [v].concat(cats.filter(c => c !== v)); st.cat = v; drawCats(); $('cats').scrollLeft = 0; };
+}
+function drawTags() {
+  const tags = data.tags || [];
+  $('tags').innerHTML = tags.map(t => `<button class="tag ${st.tags.indexOf(t) >= 0 ? 'on' : ''} ${t === 'EST' ? 'est' : ''}" data-v="${esc(t)}">${esc(t)}</button>`).join('')
+    + '<button class="tag add" id="addTag" aria-label="New tag"><i class="ti ti-plus"></i></button>';
+  $('tags').querySelectorAll('.tag[data-v]').forEach(b => b.onclick = () => {
+    const v = b.dataset.v, i = st.tags.indexOf(v); i >= 0 ? st.tags.splice(i, 1) : st.tags.push(v); drawTags(); });
+  $('addTag').onclick = () => { const v = (prompt('TAG ใหม่ (ใส่หลายอันคั่นด้วย , )') || '');
+    v.split(',').map(s => s.trim().toUpperCase()).filter(Boolean).forEach(t => {
+      if (tags.indexOf(t) < 0) data.tags = [t].concat(data.tags); if (st.tags.indexOf(t) < 0) st.tags.push(t); });
+    drawTags(); };
+  $('chosenText').textContent = st.tags.length ? st.tags.join(', ') : 'ยังไม่เลือก TAG';
+  $('chosenText').style.color = st.tags.length ? 'var(--text)' : 'var(--muted)';
+}
+$('clear').onclick = () => { st.tags = []; drawTags(); };
+
+/* ---------- who ---------- */
+document.querySelectorAll('#who button').forEach(b => b.onclick = () => {
+  st.who = b.dataset.w; document.querySelectorAll('#who button').forEach(x => x.classList.toggle('on', x === b)); });
+
+/* ---------- keypad ---------- */
+function drawAmount() {
+  const a = st.amt, [i, d] = a.split('.');
+  $('amount').innerHTML = '<small>฿</small> ' + Number(i).toLocaleString('en-US') + (d !== undefined ? '.' + d : '');
+  const n = INST[st.inst];
+  $('per').textContent = n > 1 && +a > 0 ? '฿' + money(a / n) + ' × ' + n + ' เดือน' : '';
+}
+const KEYS = [['7',1,1],['8',1,2],['9',1,3],['del',1,4],['4',2,1],['5',2,2],['6',2,3],['C',2,4],
+              ['1',3,1],['2',3,2],['3',3,3],['save',3,4],['0',4,1],['.',4,3]];
+KEYS.forEach(([k, r, c]) => {
+  const b = document.createElement('button');
+  b.style.gridRow = k === 'save' ? '3 / span 2' : r;
+  b.style.gridColumn = k === '0' ? '1 / span 2' : c;
+  if (k === 'del') { b.className = 'fn'; b.innerHTML = '<i class="ti ti-backspace"></i>'; b.setAttribute('aria-label', 'Delete'); }
+  else if (k === 'C') { b.className = 'fn'; b.textContent = 'C'; }
+  else if (k === 'save') { b.className = 'save'; b.textContent = 'Save'; }
+  else b.textContent = k;
+  b.onclick = () => k === 'save' ? save() : press(k);
+  $('keys').appendChild(b);
+});
+function press(k) {
+  let a = st.amt;
+  if (k === 'del') a = a.length > 1 ? a.slice(0, -1) : '0';
+  else if (k === 'C') a = '0';
+  else if (k === '.') { if (a.indexOf('.') < 0) a += '.'; }
+  else if ((a.split('.')[1] || '').length < 2 && a.replace('.', '').length < 9) a = a === '0' ? k : a + k;
+  st.amt = a; drawAmount();
+}
+
+/* ---------- save + offline queue ---------- */
+function save() {
+  const amount = Number(st.amt);
+  if (!(amount > 0)) { toast('ใส่จำนวนเงินก่อน'); return; }
+  if (!st.card) { toast('ยังไม่มีบัตร'); return; }
+  if (!st.cat) { toast('เลือก CATEGORY ก่อน'); return; }
+  const n = INST[st.inst];
+  const row = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), month: st.month, card: st.card,
+                cat: st.cat, tags: st.tags.join(', '), who: st.who, amount: amount, months: n };
+  queue.push(row); store.set(QUEUE_KEY, queue);
+  applyLocally(row);
+  const c = cardList().find(x => x.name === st.card);
+  toast('บันทึก ' + money(amount) + ' → ' + st.month + ' · ' + (c ? c.short : '') + ' · ' + st.cat);
+  st.amt = '0'; st.tags = []; st.inst = 0;
+  store.set(STATE_KEY, { card: st.card, cat: st.cat });
+  drawAll(); $('cats').scrollLeft = 0; $('tags').scrollLeft = 0;
+  sync();
+}
+// so the totals and the "latest used" order are right before the sheet answers
+function applyLocally(row) {
+  const per = row.amount / row.months, start = index(row.month);
+  const aeShare = row.who === 'AE' ? 1 : row.who === 'PEI+AE' ? .5 : 0;
+  data.totals = data.totals || {};
+  for (let k = 0; k < row.months; k++) {
+    const t = data.totals[label(start + k)] = data.totals[label(start + k)] || [0, 0, 0];
+    t[0] += per; t[1] += per * aeShare; t[2] += per * (1 - aeShare);
+  }
+  const front = (arr, v, key) => [v].concat((arr || []).filter(x => (key ? key(x) : x) !== (key ? key(v) : v)));
+  const card = cardList().find(c => c.name === row.card);
+  if (card) data.cards = front(data.cards, card, c => c.name);
+  data.cats = front(data.cats, row.cat);
+  row.tags.split(', ').filter(Boolean).reverse().forEach(t => { data.tags = front(data.tags, t); });
+  store.set(DATA_KEY, data);
+}
+let syncing = false;
+async function sync() {
+  if (DEMO || syncing) return;
+  syncing = true;
+  try {
+    const sending = queue.slice();
+    const res = await call(sending.length ? { action: 'add', rows: sending } : { action: 'init' });
+    if (sending.length) { const ids = sending.map(r => r.id); queue = queue.filter(r => ids.indexOf(r.id) < 0); store.set(QUEUE_KEY, queue); }
+    takeData(res);
+    if (sending.length) toast('ส่งเข้าชีตแล้ว ' + sending.length + ' รายการ');
+  } catch (e) {
+    if (queue.length) toast('ไม่มีเน็ต เก็บไว้ในเครื่องก่อน (รอส่ง ' + queue.length + ')');
+  } finally { syncing = false; drawMonth(); }
+}
+async function call(body) {
+  const r = await fetch(cfg.api, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                   body: JSON.stringify(Object.assign({ key: cfg.key }, body)) });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'error');
+  return j;
+}
+function takeData(res) {
+  data = { cards: res.cards, cats: res.cats, tags: res.tags, totals: res.totals, now: res.now };
+  queue.forEach(applyLocally);                // rows still waiting are not in the sheet yet
+  store.set(DATA_KEY, data);
+  drawAll();
+}
+
+/* ---------- monthly bills (EST from the max of the 3 months before) ---------- */
+$('bills').onclick = async () => {
+  if (DEMO) { toast('โหมด DEMO: ต่อชีตก่อนถึงจะใช้ได้'); return; }
+  if (!navigator.onLine) { toast('ต้องต่อเน็ตก่อน'); return; }
+  if (!confirm('สร้างบิลรายเดือน (EST) ของ ' + st.month + '?\nใช้ยอดสูงสุดของ 3 เดือนก่อน เฉพาะ MONTHLY')) return;
+  try { const res = await call({ action: 'monthly', month: st.month }); takeData(res);
+        toast(res.made ? 'เพิ่ม EST ' + res.made + ' รายการใน ' + st.month : 'ไม่มีบิลที่ต้องเพิ่ม'); }
+  catch (e) { toast('ทำไม่สำเร็จ: ' + e.message); }
+};
+
+/* ---------- helpers ---------- */
+function swipe(el, fn) {
+  let x0, y0;
+  el.addEventListener('pointerdown', e => { x0 = e.clientX; y0 = e.clientY; });
+  el.addEventListener('pointerup', e => { if (x0 === undefined) return; fn(e.clientX - x0, e.clientY - y0); x0 = undefined; });
+  el.addEventListener('touchmove', e => { if (el.id !== 'month') e.preventDefault(); }, { passive: false });
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function drawAll() { drawMonth(); drawPickers(); drawCats(); drawTags(); drawAmount(); }
+
+drawAll();
+sync();
+window.addEventListener('online', sync);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) sync(); });
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
