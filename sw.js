@@ -1,6 +1,6 @@
 // Keeps the app shell (page, icon, fonts) on the phone so it opens without internet.
 // Calls to the sheet (script.google.com) are never cached.
-const CACHE = 'money-v1';
+const CACHE = 'money-v2';
 const SHELL = ['./', './index.html', './icon-180.png', './manifest.json'];
 
 self.addEventListener('install', e => {
