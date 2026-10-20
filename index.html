@@ -114,7 +114,7 @@ button{font-family:inherit;color:inherit}
 
 <script>
 /* ---------- config: #api=<web app url>&key=<secret> (kept on this phone) ---------- */
-const CFG_KEY = 'money.cfg', DATA_KEY = 'money.data', QUEUE_KEY = 'money.queue', STATE_KEY = 'money.state';
+const CFG_KEY = 'money.cfg', DATA_KEY = 'money.data', QUEUE_KEY = 'money.queue';
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
@@ -146,10 +146,11 @@ const DEMO_DATA = {
   now: label(new Date().getFullYear() * 12 + new Date().getMonth()),
 };
 
-let data = store.get(DATA_KEY, null) || DEMO_DATA;
+let data = store.get(DATA_KEY, null) || (DEMO ? DEMO_DATA : { cards: [], cats: [], tags: [], totals: {}, now: DEMO_DATA.now });
 let queue = store.get(QUEUE_KEY, []);
-const saved = store.get(STATE_KEY, {});
-const st = { month: data.now, card: saved.card || null, inst: 0, cat: saved.cat || null, who: 'PEI', tags: [], amt: '0' };
+const st = { month: data.now, card: null, inst: 0, cat: null, who: 'PEI', tags: [], amt: '0' };
+// until the user taps a card / category, they follow the latest-used one from the sheet
+const picked = { card: false, cat: false };
 
 const $ = id => document.getElementById(id);
 let toastTimer;
@@ -191,7 +192,7 @@ function drawPickers() {
   $('vInst').textContent = INST[st.inst] === 1 ? 'ไม่ผ่อน' : INST[st.inst] + ' เดือน';
 }
 function stepCard(d) { const cards = cardList(); if (!cards.length) return;
-  const i = cards.findIndex(c => c.name === st.card); st.card = cards[(i + d + cards.length) % cards.length].name; drawPickers(); drawAmount(); }
+  const i = cards.findIndex(c => c.name === st.card); st.card = cards[(i + d + cards.length) % cards.length].name; picked.card = true; drawPickers(); drawAmount(); }
 function stepInst(d) { st.inst = Math.max(0, Math.min(INST.length - 1, st.inst + d)); drawPickers(); drawAmount(); }
 document.querySelectorAll('#pCard .ar button').forEach(b => b.onclick = () => stepCard(+b.dataset.d));
 document.querySelectorAll('#pInst .ar button').forEach(b => b.onclick = () => stepInst(+b.dataset.d));
@@ -204,9 +205,9 @@ function drawCats() {
   if (!st.cat || cats.indexOf(st.cat) < 0) st.cat = cats[0] || '';
   $('cats').innerHTML = cats.map(c => `<button class="cat ${c === st.cat ? 'on' : ''}" data-v="${esc(c)}"><i class="ti ti-${ICONS[c] || 'circle-dot'}"></i><span>${esc(c)}</span></button>`).join('')
     + '<button class="cat add" id="addCat" aria-label="New category"><i class="ti ti-plus"></i><span>NEW</span></button>';
-  $('cats').querySelectorAll('.cat[data-v]').forEach(b => b.onclick = () => { st.cat = b.dataset.v; drawCats(); });
+  $('cats').querySelectorAll('.cat[data-v]').forEach(b => b.onclick = () => { st.cat = b.dataset.v; picked.cat = true; drawCats(); });
   $('addCat').onclick = () => { const v = (prompt('CATEGORY ใหม่') || '').trim().toUpperCase(); if (!v) return;
-    data.cats = [v].concat(cats.filter(c => c !== v)); st.cat = v; drawCats(); $('cats').scrollLeft = 0; };
+    data.cats = [v].concat(cats.filter(c => c !== v)); st.cat = v; picked.cat = true; drawCats(); $('cats').scrollLeft = 0; };
 }
 function drawTags() {
   const tags = data.tags || [];
@@ -270,7 +271,7 @@ function save() {
   const c = cardList().find(x => x.name === st.card);
   toast('บันทึก ' + money(amount) + ' → ' + st.month + ' · ' + (c ? c.short : '') + ' · ' + st.cat);
   st.amt = '0'; st.tags = []; st.inst = 0;
-  store.set(STATE_KEY, { card: st.card, cat: st.cat });
+  picked.card = picked.cat = false;
   drawAll(); $('cats').scrollLeft = 0; $('tags').scrollLeft = 0;
   sync();
 }
@@ -315,6 +316,8 @@ function takeData(res) {
   data = { cards: res.cards, cats: res.cats, tags: res.tags, totals: res.totals, now: res.now };
   queue.forEach(applyLocally);                // rows still waiting are not in the sheet yet
   store.set(DATA_KEY, data);
+  if (!picked.card && data.cards.length) st.card = data.cards[0].name;
+  if (!picked.cat && data.cats.length) st.cat = data.cats[0];
   drawAll();
 }
 
