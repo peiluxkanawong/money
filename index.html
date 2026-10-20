@@ -63,6 +63,16 @@ button{font-family:inherit;color:inherit}
 .tag.on{background:var(--pick);color:var(--pickText);border-color:var(--pickLine)}
 .tag.est{font-style:italic}
 .add{border-style:dashed}
+.cat.add span{color:var(--pickText)}
+/* search: magnifier first, turns into a box; no match -> small + to add */
+.row{flex:none;display:flex;gap:6px}
+.row .strip{flex:1;min-width:0}
+.find{flex:none;width:42px;border-radius:16px;border:1px dashed var(--line);background:none;color:var(--muted);font-size:21px;padding:0}
+#tagRow .find{height:34px;border-radius:17px;font-size:17px}
+.q{display:none;flex:none;width:118px;min-width:0;border:1px solid var(--pickLine);border-radius:16px;padding:0 10px;font-family:inherit;font-size:16px;background:var(--bg);color:var(--text);text-transform:uppercase;outline:none;-webkit-user-select:text;user-select:text}
+#tagRow .q{height:34px;border-radius:17px}
+.row.searching .find{display:none}
+.row.searching .q{display:block}
 #chosen{flex:none;display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border-radius:10px;background:var(--soft);font-size:13px}
 #chosen span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #chosen button{border:none;background:none;color:var(--muted);font-size:16px;padding:0}
@@ -103,8 +113,8 @@ button{font-family:inherit;color:inherit}
     <span class="ar"><button data-d="-1" aria-label="Fewer months"><i class="ti ti-chevron-up"></i></button><button data-d="1" aria-label="More months"><i class="ti ti-chevron-down"></i></button></span></div>
 </div>
 
-<div class="strip" id="cats"></div>
-<div class="strip" id="tags"></div>
+<div class="row" id="catRow"><button class="find" id="findCat" aria-label="Search category"><i class="ti ti-search"></i></button><input class="q" id="qCat" placeholder="CATEGORY" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done"><div class="strip" id="cats"></div></div>
+<div class="row" id="tagRow"><button class="find" id="findTag" aria-label="Search tag"><i class="ti ti-search"></i></button><input class="q" id="qTag" placeholder="TAG" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done"><div class="strip" id="tags"></div></div>
 <div id="chosen"><i class="ti ti-tag" style="color:var(--muted)"></i><span id="chosenText"></span><button id="clear" aria-label="Clear tags"><i class="ti ti-x"></i></button></div>
 
 <div id="who"><button data-w="PEI" class="on">PEI</button><button data-w="AE">AE</button><button data-w="PEI+AE">PEI+AE</button></div>
@@ -141,6 +151,7 @@ const DEMO_DATA = {
           .map(([name, short]) => ({ name, short })),
   cats: ['MEAL','TOBA&SHOTA','MONTHLY','HEALTH','SHOPPING','OFFICE','KIDS','DEBT','HOME','TRIP','FAMILY','CARD'],
   tags: ['GRAB','LINEMAN','KASTY','PURRFECT CAT HOSPITAL','MEA','EST','SHOPEE','TRUE CORP.','NETFLIX','CLAUDE'],
+  catTags: { MEAL:['GRAB','LINEMAN'], 'TOBA&SHOTA':['KASTY','PURRFECT CAT HOSPITAL'], MONTHLY:['MEA','EST','TRUE CORP.','NETFLIX','CLAUDE'], SHOPPING:['SHOPEE'] },
   totals: { 'Sep-26':[54109.44,16659.64,37449.80], 'Oct-26':[74856.57,16931.39,57925.18], 'Nov-26':[85845.32,21579.67,64265.66],
             'Dec-26':[62884.66,18301.67,44583.00], 'Jan-27':[52178.99,15701.67,36477.32] },
   now: label(new Date().getFullYear() * 12 + new Date().getMonth()),
@@ -200,25 +211,63 @@ swipe($('pCard'), (dx, dy) => { if (Math.abs(dy) > 20 && Math.abs(dy) > Math.abs
 swipe($('pInst'), (dx, dy) => { if (Math.abs(dy) > 20 && Math.abs(dy) > Math.abs(dx)) stepInst(dy < 0 ? 1 : -1); });
 
 /* ---------- categories + tags ---------- */
+const find = { cat: '', tag: '' };                      // search text; '' = show everything
+const norm = v => String(v || '').trim().toUpperCase();
+const FIND = { cat: ['catRow', 'qCat', 'findCat', 'cats'], tag: ['tagRow', 'qTag', 'findTag', 'tags'] };
+function openFind(kind) {
+  const [row, input] = FIND[kind];
+  $(row).classList.add('searching'); $(input).value = ''; find[kind] = ''; $(input).focus();
+}
+function closeFind(kind) {
+  const [row, input] = FIND[kind];
+  $(row).classList.remove('searching'); $(input).value = ''; find[kind] = ''; $(input).blur();
+}
+Object.keys(FIND).forEach(kind => {
+  const [row, input, btn, strip] = FIND[kind], draw = () => kind === 'cat' ? drawCats() : drawTags();
+  $(btn).onclick = () => openFind(kind);
+  $(input).oninput = () => { find[kind] = $(input).value; draw(); $(strip).scrollLeft = 0; };
+  // Enter / Done picks the first chip shown
+  $(input).onkeydown = e => { if (e.key === 'Enter') { const b = $(strip).querySelector('button'); b ? b.click() : closeFind(kind); } };
+  // leaving an empty box puts the magnifier back
+  $(input).onblur = () => setTimeout(() => { if (!norm(find[kind]) && $(row).classList.contains('searching')) { closeFind(kind); draw(); } }, 150);
+});
+function showOn(strip) { const b = $(strip).querySelector('.on'); if (b) b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+// a chip that adds the typed text, only when nothing has exactly that name
+const newChip = (cls, term, list) => term && list.indexOf(term) < 0
+  ? `<button class="${cls} add" data-new="${esc(term)}"><i class="ti ti-plus"></i>${cls === 'cat' ? `<span>${esc(term)}</span>` : ' ' + esc(term)}</button>` : '';
+
 function drawCats() {
   const cats = data.cats || [];
   if (!st.cat || cats.indexOf(st.cat) < 0) st.cat = cats[0] || '';
-  $('cats').innerHTML = cats.map(c => `<button class="cat ${c === st.cat ? 'on' : ''}" data-v="${esc(c)}"><i class="ti ti-${ICONS[c] || 'circle-dot'}"></i><span>${esc(c)}</span></button>`).join('')
-    + '<button class="cat add" id="addCat" aria-label="New category"><i class="ti ti-plus"></i><span>NEW</span></button>';
-  $('cats').querySelectorAll('.cat[data-v]').forEach(b => b.onclick = () => { st.cat = b.dataset.v; picked.cat = true; drawCats(); });
-  $('addCat').onclick = () => { const v = (prompt('CATEGORY ใหม่') || '').trim().toUpperCase(); if (!v) return;
-    data.cats = [v].concat(cats.filter(c => c !== v)); st.cat = v; picked.cat = true; drawCats(); $('cats').scrollLeft = 0; };
+  const term = norm(find.cat), shown = term ? cats.filter(c => c.indexOf(term) >= 0) : cats;
+  $('cats').innerHTML = shown.map(c => `<button class="cat ${c === st.cat ? 'on' : ''}" data-v="${esc(c)}"><i class="ti ti-${ICONS[c] || 'circle-dot'}"></i><span>${esc(c)}</span></button>`).join('')
+    + newChip('cat', term, cats);
+  $('cats').querySelectorAll('button').forEach(b => b.onclick = () => {
+    const v = b.dataset.v || b.dataset.new, changed = v !== st.cat;
+    if (b.dataset.new) data.cats = [v].concat(cats);
+    st.cat = v; picked.cat = true;
+    if (term) closeFind('cat');
+    drawCats(); if (term) showOn('cats');
+    if (changed) { drawTags(); $('tags').scrollLeft = 0; }
+  });
+}
+// tags already used with the chosen CATEGORY come first, then the rest (both latest first)
+function tagOrder() {
+  const mine = (data.catTags || {})[st.cat] || [];
+  return mine.concat((data.tags || []).filter(t => mine.indexOf(t) < 0));
 }
 function drawTags() {
-  const tags = data.tags || [];
-  $('tags').innerHTML = tags.map(t => `<button class="tag ${st.tags.indexOf(t) >= 0 ? 'on' : ''} ${t === 'EST' ? 'est' : ''}" data-v="${esc(t)}">${esc(t)}</button>`).join('')
-    + '<button class="tag add" id="addTag" aria-label="New tag"><i class="ti ti-plus"></i></button>';
-  $('tags').querySelectorAll('.tag[data-v]').forEach(b => b.onclick = () => {
-    const v = b.dataset.v, i = st.tags.indexOf(v); i >= 0 ? st.tags.splice(i, 1) : st.tags.push(v); drawTags(); });
-  $('addTag').onclick = () => { const v = (prompt('TAG ใหม่ (ใส่หลายอันคั่นด้วย , )') || '');
-    v.split(',').map(s => s.trim().toUpperCase()).filter(Boolean).forEach(t => {
-      if (tags.indexOf(t) < 0) data.tags = [t].concat(data.tags); if (st.tags.indexOf(t) < 0) st.tags.push(t); });
-    drawTags(); };
+  const tags = tagOrder(), term = norm(find.tag);
+  const shown = term ? tags.filter(t => t.indexOf(term) >= 0) : tags;
+  $('tags').innerHTML = shown.map(t => `<button class="tag ${st.tags.indexOf(t) >= 0 ? 'on' : ''} ${t === 'EST' ? 'est' : ''}" data-v="${esc(t)}">${esc(t)}</button>`).join('')
+    + newChip('tag', term, tags);
+  $('tags').querySelectorAll('button').forEach(b => b.onclick = () => {
+    const v = b.dataset.v || b.dataset.new, i = st.tags.indexOf(v);
+    if (b.dataset.new) data.tags = [v].concat(data.tags || []);
+    i >= 0 ? st.tags.splice(i, 1) : st.tags.push(v);
+    if (term) closeFind('tag');
+    drawTags(); if (term) showOn('tags');
+  });
   $('chosenText').textContent = st.tags.length ? st.tags.join(', ') : 'ยังไม่เลือก TAG';
   $('chosenText').style.color = st.tags.length ? 'var(--text)' : 'var(--muted)';
 }
@@ -272,6 +321,7 @@ function save() {
   toast('บันทึก ' + money(amount) + ' → ' + st.month + ' · ' + (c ? c.short : '') + ' · ' + st.cat);
   st.amt = '0'; st.tags = []; st.inst = 0;
   picked.card = picked.cat = false;
+  closeFind('cat'); closeFind('tag');
   drawAll(); $('cats').scrollLeft = 0; $('tags').scrollLeft = 0;
   sync();
 }
@@ -288,7 +338,9 @@ function applyLocally(row) {
   const card = cardList().find(c => c.name === row.card);
   if (card) data.cards = front(data.cards, card, c => c.name);
   data.cats = front(data.cats, row.cat);
-  row.tags.split(', ').filter(Boolean).reverse().forEach(t => { data.tags = front(data.tags, t); });
+  data.catTags = data.catTags || {};
+  row.tags.split(', ').filter(Boolean).reverse().forEach(t => {
+    data.tags = front(data.tags, t); data.catTags[row.cat] = front(data.catTags[row.cat], t); });
   store.set(DATA_KEY, data);
 }
 let syncing = false;
@@ -313,7 +365,7 @@ async function call(body) {
   return j;
 }
 function takeData(res) {
-  data = { cards: res.cards, cats: res.cats, tags: res.tags, totals: res.totals, now: res.now };
+  data = { cards: res.cards, cats: res.cats, tags: res.tags, catTags: res.catTags || {}, totals: res.totals, now: res.now };
   queue.forEach(applyLocally);                // rows still waiting are not in the sheet yet
   store.set(DATA_KEY, data);
   if (!picked.card && data.cards.length) st.card = data.cards[0].name;
