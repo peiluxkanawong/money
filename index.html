@@ -178,7 +178,7 @@ button{font-family:inherit;color:inherit}
 
 <script>
 /* ---------- config: #api=<web app url>&key=<secret> (kept on this phone) ---------- */
-const CFG_KEY = 'money.cfg', DATA_KEY = 'money.data', QUEUE_KEY = 'money.queue';
+const CFG_KEY = 'money.cfg', DATA_KEY = 'money.data', QUEUE_KEY = 'money.queue', MONTH_KEY = 'money.month';
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
@@ -223,6 +223,8 @@ const DEMO_DATA = {
 let data = store.get(DATA_KEY, null) || (DEMO ? DEMO_DATA : { cards: [], cats: [], tags: [], totals: {}, now: DEMO_DATA.now });
 let queue = store.get(QUEUE_KEY, []);
 const st = { month: data.now, card: null, inst: 0, cat: null, who: 'PEI', tags: [], amt: '0' };
+// reopen on the month picked last time (unless it is already in the past)
+{ const m = store.get(MONTH_KEY, null); if (index(m) >= index(data.now) && monthList().indexOf(m) >= 0) st.month = m; }
 // until the user taps a card, it follows the latest-used one from the sheet; CATEGORY starts empty
 const picked = { card: false };
 
@@ -240,7 +242,7 @@ function monthList() {
 function shiftMonth(d) {
   const list = monthList(), i = list.indexOf(st.month);
   const j = Math.max(0, Math.min(list.length - 1, (i < 0 ? list.indexOf(data.now) : i) + d));
-  if (list[j] !== st.month) { st.month = list[j]; drawMonth(); }
+  if (list[j] !== st.month) { st.month = list[j]; store.set(MONTH_KEY, st.month); drawMonth(); }
 }
 function drawMonth() {
   const t = (data.totals || {})[st.month] || [0, 0, 0];
