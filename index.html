@@ -496,7 +496,7 @@ function sheet(W, H) {
   return d;
 }
 const AE_COL = { red: '#C8402F', ink: '#4A3527', grey: '#A08D7D', orange: '#B5652A', line: '#E4D8CB', head: '#8B5E3C', head2: '#D0916A' };
-const aeLook = r => r.a < 0 || (r.cells && r.cells.some(v => v < 0)) ? AE_COL.red : r.e ? AE_COL.grey : r.h ? AE_COL.orange : AE_COL.ink;
+const aeLook = r => r.a < 0 || (r.cells && r.cells.some(v => v < 0)) ? AE_COL.red : r.e ? AE_COL.grey : AE_COL.ink;
 
 // picture 1: this month, grouped by CATEGORY (biggest first), items biggest first
 function drawAeMonth() {
@@ -520,7 +520,7 @@ function drawAeMonth() {
     d.box(P, y + 74, W - 2 * P, 2, AE_COL.head); y += 76;
     cat.items.forEach(it => {
       const amt = money(it.a); d.font(32, 400); const aw = d.g.measureText(amt).width;
-      const info = [it.n > 1 ? 'งวด ' + it.k1 + '/' + it.n : '', it.h ? 'หาร 2' : '', it.e ? 'EST' : ''].filter(Boolean).join('  ·  ');
+      const info = [it.n > 1 ? 'งวด ' + it.k1 + '/' + it.n : '', it.e ? 'EST' : ''].filter(Boolean).join('  ·  ');
       d.text(d.fit(it.t || '-', 32, 400, W - 2 * P - 30 - aw - 40), P + 30, y + (info ? 42 : 54), 32, aeLook(it), 400, 'left', it.e);
       if (info) d.text(info, P + 30, y + 76, 24, it.a < 0 ? red : grey, 400);
       d.text(amt, W - P, y + 54, 32, aeLook(it), 400, 'right', it.e);
@@ -540,8 +540,8 @@ function drawAeLater() {
   if (!months.length) return null;
   const lines = {};
   list.forEach(it => months.forEach((i, j) => { if (!aeOn(it, i)) return;
-    const key = it.c + '|' + it.t + '|' + it.h + '|' + it.e;
-    const r = lines[key] = lines[key] || { name: it.c + (it.t ? ' · ' + it.t : ''), c: it.c, t: it.t, h: it.h, e: it.e, cells: months.map(() => 0) };
+    const key = it.c + '|' + it.t + '|' + it.e;
+    const r = lines[key] = lines[key] || { name: it.c + (it.t ? ' · ' + it.t : ''), c: it.c, t: it.t, e: it.e, cells: months.map(() => 0) };
     r.cells[j] += it.a; }));
   const rows = Object.values(lines).map(r => Object.assign(r, { left: r.cells.filter(v => Math.abs(v) > .004).length }))
     .sort((a, b) => b.left - a.left || a.c.localeCompare(b.c) || a.t.localeCompare(b.t));
@@ -573,7 +573,7 @@ function drawAeLater() {
     y += RH;
   });
   d.box(P, y, tw, 2, line);
-  d.text('สีส้ม = หาร 2   ·   สีเทา = EST (ประมาณการ)   ·   สีแดง = ยอดติดลบ', P, y + 54, 26, grey, 400);
+  d.text('สีเทา = EST (ประมาณการ)   ·   สีแดง = ยอดติดลบ', P, y + 54, 26, grey, 400);
   d.stamp(H - 30);
   return d.c;
 }
