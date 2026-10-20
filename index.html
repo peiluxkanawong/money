@@ -89,6 +89,34 @@ button{font-family:inherit;color:inherit}
 #keys .save{background:var(--green2);color:#fff;font-size:21px;font-weight:500}
 #keys button:active{filter:brightness(.92)}
 
+/* ranking: new spending of the month, biggest first */
+#mMain{background:none;border:none;color:#fff;text-align:left;padding:0}
+#mLabel i{font-size:14px;margin-left:4px;opacity:.8}
+#top{position:fixed;inset:0;z-index:5;background:var(--bg);display:none;flex-direction:column;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 14px calc(env(safe-area-inset-bottom) + 10px)}
+#top.show{display:flex}
+#topHead{flex:none;position:relative;background:var(--green);color:#fff;border-radius:16px;padding:10px 40px;display:flex;align-items:center;justify-content:space-between;touch-action:pan-y}
+#topHead .nav{position:absolute;top:0;bottom:0;width:36px;display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.7;background:none;border:none;color:#fff}
+#topHead .nav.l{left:0} #topHead .nav.r{right:0}
+#tLabel{font-size:15px;opacity:.9}
+#tTotal{font-size:24px;font-weight:500;line-height:1.2}
+#topClose{border:1px solid rgba(255,255,255,.5);border-radius:12px;background:none;color:#fff;font-size:13px;padding:6px 12px}
+#topNote{flex:none;font-size:11px;color:var(--muted);text-align:center}
+#topList{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:6px}
+.tr{flex:none;border-radius:14px;background:var(--soft);padding:10px 12px}
+.tl{display:flex;align-items:center;gap:10px;font-size:14px}
+.tl .rk{width:18px;color:var(--muted);font-size:12px;text-align:center}
+.tl i{font-size:22px;color:var(--green2)}
+.tl .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl .am{font-weight:500}
+.tl .neg,.tg .neg{color:var(--red)}
+.tl .ch{color:var(--muted);font-size:16px}
+.bar{height:5px;border-radius:3px;background:var(--line);margin:7px 0 0 28px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--green2);border-radius:3px}
+.tg{margin:8px 0 0 28px;display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted)}
+.tg div{display:flex;justify-content:space-between;gap:10px}
+.tg div span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty{text-align:center;color:var(--muted);font-size:13px;padding:30px 0}
+
 #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 18px);transform:translateX(-50%);background:var(--text);color:var(--bg);padding:9px 16px;border-radius:12px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:88%;text-align:center}
 #toast.show{opacity:.95}
 </style>
@@ -97,7 +125,7 @@ button{font-family:inherit;color:inherit}
 
 <div id="month">
   <button class="nav l" id="prev" aria-label="Previous month"><i class="ti ti-chevron-left"></i></button>
-  <div><div id="mLabel">Oct-26</div><div id="mTotal">0.00</div></div>
+  <button id="mMain" aria-label="Ranking"><div id="mLabel">Oct-26</div><div id="mTotal">0.00</div></button>
   <div id="mSplit"><div>AE <span id="mAe">0.00</span></div><div>PEI <span id="mPei">0.00</span></div>
     <button id="bills"><i class="ti ti-receipt"></i> บิลรายเดือน</button></div>
   <button class="nav r" id="next" aria-label="Next month"><i class="ti ti-chevron-right"></i></button>
@@ -120,6 +148,16 @@ button{font-family:inherit;color:inherit}
 <div id="who"><button data-w="PEI" class="on">PEI</button><button data-w="AE">AE</button><button data-w="PEI+AE">PEI+AE</button></div>
 
 <div id="keys"></div>
+<div id="top">
+  <div id="topHead">
+    <button class="nav l" id="tPrev" aria-label="Previous month"><i class="ti ti-chevron-left"></i></button>
+    <div><div id="tLabel"></div><div id="tTotal"></div></div>
+    <button id="topClose"><i class="ti ti-x"></i> ปิด</button>
+    <button class="nav r" id="tNext" aria-label="Next month"><i class="ti ti-chevron-right"></i></button>
+  </div>
+  <div id="topNote">ใช้อะไรเยอะสุด · ไม่รวมงวดผ่อนจากเดือนก่อน · แตะหมวดเพื่อดู TAG</div>
+  <div id="topList"></div>
+</div>
 <div id="toast"></div>
 
 <script>
@@ -152,6 +190,9 @@ const DEMO_DATA = {
   cats: ['MEAL','TOBA&SHOTA','MONTHLY','HEALTH','SHOPPING','OFFICE','KIDS','DEBT','HOME','TRIP','FAMILY','CARD'],
   tags: ['GRAB','LINEMAN','KASTY','PURRFECT CAT HOSPITAL','MEA','EST','SHOPEE','TRUE CORP.','NETFLIX','CLAUDE'],
   catTags: { MEAL:['GRAB','LINEMAN'], 'TOBA&SHOTA':['KASTY','PURRFECT CAT HOSPITAL'], MONTHLY:['MEA','EST','TRUE CORP.','NETFLIX','CLAUDE'], SHOPPING:['SHOPEE'] },
+  top: { 'Oct-26': [['MONTHLY', 9150, [['MEA', 4850], ['TRUE CORP.', 2100], ['NETFLIX', 419], ['CLAUDE', 3781]]],
+                    ['MEAL', 3920.5, [['GRAB', 2410.5], ['LINEMAN', 1510]]], ['TOBA&SHOTA', 2400, [['KASTY', 2400]]],
+                    ['SHOPPING', 1980, [['SHOPEE', 1980]]]] },
   totals: { 'Sep-26':[54109.44,16659.64,37449.80], 'Oct-26':[74856.57,16931.39,57925.18], 'Nov-26':[85845.32,21579.67,64265.66],
             'Dec-26':[62884.66,18301.67,44583.00], 'Jan-27':[52178.99,15701.67,36477.32] },
   now: label(new Date().getFullYear() * 12 + new Date().getMonth()),
@@ -181,17 +222,40 @@ function shiftMonth(d) {
 }
 function drawMonth() {
   const t = (data.totals || {})[st.month] || [0, 0, 0];
-  $('mLabel').textContent = st.month;
+  $('mLabel').innerHTML = esc(st.month) + '<i class="ti ti-chart-bar"></i>';
   $('mTotal').textContent = money(t[0]);
   $('mAe').textContent = money(t[1]);
   $('mPei').textContent = money(t[2]);
   $('pending').style.display = queue.length ? 'block' : 'none';
   $('pending').textContent = 'รอส่ง ' + queue.length;
   $('demo').style.display = DEMO ? 'block' : 'none';
+  if ($('top').classList.contains('show')) drawTop();
 }
 $('prev').onclick = () => shiftMonth(-1);
 $('next').onclick = () => shiftMonth(1);
 swipe($('month'), (dx, dy) => { if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) shiftMonth(dx < 0 ? 1 : -1); });
+
+/* ---------- ranking: tap the month total ---------- */
+let topOpen = -1;                                       // category showing its tags
+function drawTop() {
+  const list = (data.top || {})[st.month] || [];
+  const max = Math.max(1, ...list.map(c => c[1]));
+  $('tLabel').textContent = st.month;
+  $('tTotal').textContent = money(list.reduce((a, c) => a + c[1], 0));
+  $('topList').innerHTML = !list.length ? '<div class="empty">ยังไม่มีรายการใหม่ในเดือนนี้</div>' : list.map((c, i) =>
+    `<div class="tr" data-i="${i}"><div class="tl"><span class="rk">${i + 1}</span><i class="ti ti-${ICONS[c[0]] || 'circle-dot'}"></i>`
+    + `<span class="nm">${esc(c[0])}</span><span class="am ${c[1] < 0 ? 'neg' : ''}">${money(c[1])}</span>`
+    + `<i class="ti ti-chevron-${i === topOpen ? 'up' : 'down'} ch"></i></div>`
+    + `<div class="bar"><span style="width:${Math.max(0, c[1]) / max * 100}%"></span></div>`
+    + (i === topOpen ? '<div class="tg">' + c[2].map(t => `<div><span>${esc(t[0])}</span><span class="${t[1] < 0 ? 'neg' : ''}">${money(t[1])}</span></div>`).join('') + '</div>' : '')
+    + '</div>').join('');
+  $('topList').querySelectorAll('.tr').forEach(r => r.onclick = () => { const i = +r.dataset.i; topOpen = topOpen === i ? -1 : i; drawTop(); });
+}
+$('mMain').onclick = () => { topOpen = -1; $('top').classList.add('show'); drawTop(); $('topList').scrollTop = 0; };
+$('topClose').onclick = () => $('top').classList.remove('show');
+$('tPrev').onclick = () => { topOpen = -1; shiftMonth(-1); };
+$('tNext').onclick = () => { topOpen = -1; shiftMonth(1); };
+swipe($('topHead'), (dx, dy) => { if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) { topOpen = -1; shiftMonth(dx < 0 ? 1 : -1); } });
 
 /* ---------- card + installment pickers ---------- */
 function cardList() { return data.cards || []; }
@@ -334,6 +398,14 @@ function applyLocally(row) {
     const t = data.totals[label(start + k)] = data.totals[label(start + k)] || [0, 0, 0];
     t[0] += per; t[1] += per * aeShare; t[2] += per * (1 - aeShare);
   }
+  const top = (data.top = data.top || {})[row.month] = (data.top[row.month] || []);
+  const tag = row.tags.split(', ').filter(t => t && t !== 'EST').join(', ') || '-', first = row.amount / row.months;
+  let c = top.find(x => x[0] === row.cat);
+  if (!c) top.push(c = [row.cat, 0, []]);
+  let t = c[2].find(x => x[0] === tag);
+  if (!t) c[2].push(t = [tag, 0]);
+  c[1] += first; t[1] += first;
+  c[2].sort((a, b) => b[1] - a[1]); top.sort((a, b) => b[1] - a[1]);
   const front = (arr, v, key) => [v].concat((arr || []).filter(x => (key ? key(x) : x) !== (key ? key(v) : v)));
   const card = cardList().find(c => c.name === row.card);
   if (card) data.cards = front(data.cards, card, c => c.name);
@@ -365,7 +437,7 @@ async function call(body) {
   return j;
 }
 function takeData(res) {
-  data = { cards: res.cards, cats: res.cats, tags: res.tags, catTags: res.catTags || {}, totals: res.totals, now: res.now };
+  data = { cards: res.cards, cats: res.cats, tags: res.tags, catTags: res.catTags || {}, top: res.top || {}, totals: res.totals, now: res.now };
   queue.forEach(applyLocally);                // rows still waiting are not in the sheet yet
   store.set(DATA_KEY, data);
   if (!picked.card && data.cards.length) st.card = data.cards[0].name;
