@@ -26,7 +26,7 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'Kanit',system-ui,sans-serif;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
-body{display:flex;flex-direction:column;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 14px calc(env(safe-area-inset-bottom) + 10px);height:100dvh;overflow:hidden}
+body{display:flex;flex-direction:column;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 14px calc(env(safe-area-inset-bottom) + 10px);position:fixed;inset:0;overflow:hidden}
 button{font-family:inherit;color:inherit}
 
 /* month card: one month at a time, swipe left / right */
@@ -392,6 +392,11 @@ function swipe(el, fn) {
 }
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 function drawAll() { drawMonth(); drawPickers(); drawCats(); drawTags(); drawAmount(); }
+
+// iOS slides the page up for the keyboard and can leave it there; put it back when the keyboard goes
+const unshift = () => setTimeout(() => { if (!document.querySelector("input:focus")) window.scrollTo(0, 0); }, 50);
+document.addEventListener("focusout", unshift);
+if (window.visualViewport) visualViewport.addEventListener("resize", unshift);
 
 drawAll();
 sync();
