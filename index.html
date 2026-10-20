@@ -36,7 +36,7 @@ button{font-family:inherit;color:inherit}
 #mLabel{font-size:15px;opacity:.9}
 #mTotal{font-size:24px;font-weight:500;line-height:1.2}
 #mSplit{text-align:right;font-size:12px;line-height:1.6;opacity:.95}
-#share{margin-top:4px;font-size:11px;border:1px solid rgba(255,255,255,.5);border-radius:10px;padding:2px 8px;background:none;color:#fff}
+#share{margin-left:6px;width:30px;height:24px;border:1px solid rgba(255,255,255,.5);border-radius:8px;background:none;color:#fff;font-size:14px;padding:0;vertical-align:middle}
 #pending{position:absolute;top:-6px;right:10px;background:#BA7517;color:#fff;font-size:10px;border-radius:8px;padding:1px 7px;display:none}
 #demo{position:absolute;top:-6px;left:10px;background:#888;color:#fff;font-size:10px;border-radius:8px;padding:1px 7px;display:none}
 
@@ -98,7 +98,7 @@ button{font-family:inherit;color:inherit}
 .shotBtns button{flex:1;height:52px;border:none;border-radius:14px;font-size:17px;background:#333;color:#fff}
 .shotBtns #shotSend{background:var(--green2);flex:2}
 /* ranking: new spending of the month, biggest first */
-#mMain{background:none;border:none;color:#fff;text-align:left;padding:0}
+#mMain{color:#fff;cursor:pointer}
 #mLabel i{font-size:14px;margin-left:4px;opacity:.8}
 #top{position:fixed;inset:0;height:var(--appH,auto);z-index:5;background:var(--bg);display:none;flex-direction:column;gap:8px;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 10px)}
 #top.show{display:flex}
@@ -108,6 +108,10 @@ button{font-family:inherit;color:inherit}
 #tLabel{font-size:15px;opacity:.9}
 #tTotal{font-size:24px;font-weight:500;line-height:1.2}
 #topClose{border:1px solid rgba(255,255,255,.5);border-radius:12px;background:none;color:#fff;font-size:13px;padding:6px 12px}
+#topWho{flex:none;display:flex;background:var(--soft);border-radius:12px;padding:3px}
+#topWho button{flex:1;height:38px;border:none;background:none;border-radius:10px;font-size:14px;color:var(--muted)}
+#topWho button.on{background:var(--bg);color:var(--text)}
+#topWho button.on[data-w="ae"]{background:var(--aeBg);color:var(--ae)}
 #topNote{flex:none;font-size:11px;color:var(--muted);text-align:center}
 #topList{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:6px}
 .tr{flex:none;border-radius:14px;background:var(--soft);padding:10px 12px}
@@ -133,9 +137,8 @@ button{font-family:inherit;color:inherit}
 
 <div id="month">
   <button class="nav l" id="prev" aria-label="Previous month"><i class="ti ti-chevron-left"></i></button>
-  <button id="mMain" aria-label="Ranking"><div id="mLabel">Oct-26</div><div id="mTotal">0.00</div></button>
-  <div id="mSplit"><div>AE <span id="mAe">0.00</span></div><div>PEI <span id="mPei">0.00</span></div>
-    <button id="share"><i class="ti ti-photo"></i> ส่งให้ AE</button></div>
+  <div id="mMain" role="button" aria-label="Ranking"><div id="mLabel">Oct-26</div><div id="mTotal">0.00</div></div>
+  <div id="mSplit"><div>AE <span id="mAe">0.00</span></div><div>PEI <span id="mPei">0.00</span></div></div>
   <button class="nav r" id="next" aria-label="Next month"><i class="ti ti-chevron-right"></i></button>
   <span id="pending"></span><span id="demo">DEMO</span>
 </div>
@@ -163,7 +166,8 @@ button{font-family:inherit;color:inherit}
     <button id="topClose"><i class="ti ti-x"></i> ปิด</button>
     <button class="nav r" id="tNext" aria-label="Next month"><i class="ti ti-chevron-right"></i></button>
   </div>
-  <div id="topNote">ใช้อะไรเยอะสุด · ไม่รวมงวดผ่อนจากเดือนก่อน · แตะหมวดเพื่อดู TAG</div>
+  <div id="topWho"><button data-w="all" class="on">ALL</button><button data-w="ae">AE</button><button data-w="pei">PEI</button></div>
+  <div id="topNote">เรียงจากมากไปน้อย · งวดผ่อนจากเดือนก่อนรวมใน PREVIOUS DEBT · แตะหมวดเพื่อดู TAG</div>
   <div id="topList"></div>
 </div>
 <div id="shot">
@@ -202,9 +206,12 @@ const DEMO_DATA = {
   cats: ['MEAL','TOBA&SHOTA','MONTHLY','HEALTH','SHOPPING','OFFICE','KIDS','DEBT','HOME','TRIP','FAMILY','CARD'],
   tags: ['GRAB','LINEMAN','KASTY','PURRFECT CAT HOSPITAL','MEA','EST','SHOPEE','TRUE CORP.','NETFLIX','CLAUDE'],
   catTags: { MEAL:['GRAB','LINEMAN'], 'TOBA&SHOTA':['KASTY','PURRFECT CAT HOSPITAL'], MONTHLY:['MEA','EST','TRUE CORP.','NETFLIX','CLAUDE'], SHOPPING:['SHOPEE'] },
-  top: { 'Oct-26': [['MONTHLY', 9150, [['MEA', 4850], ['TRUE CORP.', 2100], ['NETFLIX', 419], ['CLAUDE', 3781]]],
+  top: { ae: { 'Oct-26': [['MONTHLY', 4575, [['MEA', 2425], ['TRUE CORP.', 1050], ['CLAUDE', 1100]]], ['MEAL', 1250.5, [['GRAB', 1250.5]]]] },
+         pei: { 'Oct-26': [['MONTHLY', 4575, [['MEA', 2425], ['TRUE CORP.', 1050], ['NETFLIX', 419], ['CLAUDE', 681]]], ['MEAL', 2670, [['GRAB', 1160], ['LINEMAN', 1510]]],
+                           ['TOBA&SHOTA', 2400, [['KASTY', 2400]]], ['SHOPPING', 1980, [['SHOPEE', 1980]]]] },
+         all: { 'Oct-26': [['MONTHLY', 9150, [['MEA', 4850], ['TRUE CORP.', 2100], ['NETFLIX', 419], ['CLAUDE', 3781]]],
                     ['MEAL', 3920.5, [['GRAB', 2410.5], ['LINEMAN', 1510]]], ['TOBA&SHOTA', 2400, [['KASTY', 2400]]],
-                    ['SHOPPING', 1980, [['SHOPEE', 1980]]]] },
+                    ['SHOPPING', 1980, [['SHOPEE', 1980]]]] } },
   ae: [{ c:'MEAL', t:'GRAB', k:'TMRW', s:'Oct-26', n:1, a:1250.5, x:[], e:0, h:1 }, { c:'SHOPPING', t:'IPAD', k:'SO SMART', s:'Aug-26', n:10, a:2490, x:[], e:0, h:0 },
        { c:'MONTHLY', t:'MEA', k:'LINE', s:'Oct-26', n:1, a:2425, x:[], e:1, h:1 }, { c:'CARD', t:'CASHBACK', k:'TMRW', s:'Oct-26', n:1, a:-120, x:[], e:0, h:0 },
        { c:'KIDS', t:'SCHOOL', k:'CENTRAL', s:'Oct-26', n:6, a:3000, x:[], e:0, h:1 }],
@@ -237,7 +244,7 @@ function shiftMonth(d) {
 }
 function drawMonth() {
   const t = (data.totals || {})[st.month] || [0, 0, 0];
-  $('mLabel').innerHTML = esc(st.month) + '<i class="ti ti-chart-bar"></i>';
+  $('mLabel').innerHTML = esc(st.month) + '<i class="ti ti-chart-bar"></i><button id="share" aria-label="Picture for AE"><i class="ti ti-send"></i></button>';
   $('mTotal').textContent = money(t[0]);
   $('mAe').textContent = money(t[1]);
   $('mPei').textContent = money(t[2]);
@@ -251,9 +258,10 @@ $('next').onclick = () => shiftMonth(1);
 swipe($('month'), (dx, dy) => { if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) shiftMonth(dx < 0 ? 1 : -1); });
 
 /* ---------- ranking: tap the month total ---------- */
-let topOpen = -1;                                       // category showing its tags
+let topOpen = -1, topWho = 'all';                       // category showing its tags; whose share
 function drawTop() {
-  const list = (data.top || {})[st.month] || [];
+  const list = ((data.top || {})[topWho] || {})[st.month] || [];
+  document.querySelectorAll('#topWho button').forEach(b => b.classList.toggle('on', b.dataset.w === topWho));
   const max = Math.max(1, ...list.map(c => c[1]));
   $('tLabel').textContent = st.month;
   $('tTotal').textContent = money(list.reduce((a, c) => a + c[1], 0));
@@ -266,7 +274,8 @@ function drawTop() {
     + '</div>').join('');
   $('topList').querySelectorAll('.tr').forEach(r => r.onclick = () => { const i = +r.dataset.i; topOpen = topOpen === i ? -1 : i; drawTop(); });
 }
-$('mMain').onclick = () => { topOpen = -1; $('top').classList.add('show'); drawTop(); $('topList').scrollTop = 0; };
+$('mMain').onclick = e => { if (e.target.closest('#share')) { shareAe(); return; } topOpen = -1; $('top').classList.add('show'); drawTop(); $('topList').scrollTop = 0; };
+document.querySelectorAll('#topWho button').forEach(b => b.onclick = () => { topWho = b.dataset.w; topOpen = -1; drawTop(); });
 $('topClose').onclick = () => $('top').classList.remove('show');
 $('tPrev').onclick = () => { topOpen = -1; shiftMonth(-1); };
 $('tNext').onclick = () => { topOpen = -1; shiftMonth(1); };
@@ -413,14 +422,18 @@ function applyLocally(row) {
     const t = data.totals[label(start + k)] = data.totals[label(start + k)] || [0, 0, 0];
     t[0] += per; t[1] += per * aeShare; t[2] += per * (1 - aeShare);
   }
-  const top = (data.top = data.top || {})[row.month] = (data.top[row.month] || []);
-  const tag = row.tags.split(', ').filter(t => t && t !== 'EST').join(', ') || '-', first = row.amount / row.months;
-  let c = top.find(x => x[0] === row.cat);
-  if (!c) top.push(c = [row.cat, 0, []]);
-  let t = c[2].find(x => x[0] === tag);
-  if (!t) c[2].push(t = [tag, 0]);
-  c[1] += first; t[1] += first;
-  c[2].sort((a, b) => b[1] - a[1]); top.sort((a, b) => b[1] - a[1]);
+  if (!data.top || !data.top.all) data.top = { all: {}, ae: {}, pei: {} };
+  const tag = row.tags.split(', ').filter(t => t && t !== 'EST').join(', ') || '-';
+  [['all', 1], ['ae', aeShare], ['pei', 1 - aeShare]].forEach(([who, share]) => {
+    if (!share) return;
+    const top = data.top[who][row.month] = data.top[who][row.month] || [], first = per * share;
+    let c = top.find(x => x[0] === row.cat);
+    if (!c) top.push(c = [row.cat, 0, []]);
+    let t = c[2].find(x => x[0] === tag);
+    if (!t) c[2].push(t = [tag, 0]);
+    c[1] += first; t[1] += first;
+    c[2].sort((a, b) => b[1] - a[1]); top.sort((a, b) => b[1] - a[1]);
+  });
   if (row.who !== 'PEI') (data.ae = data.ae || []).push({ c: row.cat, t: row.tags.split(', ').filter(t => t && t !== 'EST').join(', '),
     k: (cardList().find(x => x.name === row.card) || { short: row.card }).short, s: row.month, n: row.months,
     a: Math.round(row.amount / row.months * (row.who === 'AE' ? 1 : .5) * 100) / 100, x: [], e: row.tags.split(', ').indexOf('EST') >= 0 ? 1 : 0, h: row.who === 'PEI+AE' ? 1 : 0 });
@@ -466,64 +479,99 @@ function takeData(res) {
 function aeOn(it, i) { const s = index(it.s); return i >= s && i < s + it.n && it.x.indexOf(label(i)) < 0; }
 function drawAe() {
   const m = index(st.month), list = data.ae || [];
-  const rows = list.filter(it => aeOn(it, m)).map(it => Object.assign({ k1: m - index(it.s) + 1 }, it)).sort((a, b) => b.a - a.a);
-  const total = rows.reduce((a, it) => a + it.a, 0);
-  let last = m; list.forEach(it => { last = Math.max(last, index(it.s) + it.n - 1); });
-  const later = [];
-  for (let i = m + 1; i <= last; i++) { const v = list.filter(it => aeOn(it, i)).reduce((a, it) => a + it.a, 0); if (Math.abs(v) > .004) later.push([label(i), v]); }
-  const laterSum = later.reduce((a, x) => a + x[1], 0);
+  const sum = arr => arr.reduce((a, it) => a + it.a, 0);
+  // this month, grouped by CATEGORY (biggest first), items biggest first
+  const now = list.filter(it => aeOn(it, m)).map(it => Object.assign({ k1: m - index(it.s) + 1 }, it));
+  const groups = {};
+  now.forEach(it => (groups[it.c] = groups[it.c] || []).push(it));
+  const cats = Object.keys(groups).map(c => ({ c, items: groups[c].sort((a, b) => b.a - a.a), total: sum(groups[c]) })).sort((a, b) => b.total - a.total);
+  const total = sum(now);
+  // table: one row per CATEGORY + TAG, one column per month from this month on (like the AE tab)
+  let last = m; list.forEach(it => { if (aeOn(it, m) || index(it.s) > m) last = Math.max(last, index(it.s) + it.n - 1); });
+  const months = [];
+  for (let i = m; i <= last; i++) if (list.some(it => aeOn(it, i))) months.push(i);
+  const lines = {};
+  list.forEach(it => months.forEach((i, j) => { if (!aeOn(it, i)) return;
+    const key = it.c + '|' + it.t + '|' + it.h + '|' + it.e;
+    const r = lines[key] = lines[key] || { name: it.c + (it.t ? ' · ' + it.t : ''), c: it.c, t: it.t, h: it.h, e: it.e, cells: months.map(() => 0) };
+    r.cells[j] += it.a; }));
+  const rows = Object.values(lines).map(r => Object.assign(r, { left: r.cells.filter(v => Math.abs(v) > .004).length }))
+    .sort((a, b) => b.left - a.left || a.c.localeCompare(b.c) || a.t.localeCompare(b.t));
+  const colTotal = months.map((_, j) => rows.reduce((a, r) => a + r.cells[j], 0));
 
-  const W = 1080, P = 60, F = "'Kanit', sans-serif";
-  const H = 330 + 70 + Math.max(1, rows.length) * 100 + (later.length ? 70 + 40 + later.length * 62 + 90 : 0) + 100;
+  const P = 60, NW = 400, MW = 180, RH = 54, F = "'Kanit', sans-serif";
+  const W = Math.max(1080, 2 * P + NW + months.length * MW), CW = W;     // everything as wide as the table
+  const H = 330 + 70 + cats.length * 76 + now.length * 88 + (now.length ? 0 : 100)
+          + (months.length ? 110 + (rows.length + 2) * RH + 70 : 0) + 100;
   const c = document.createElement('canvas'); c.width = W; c.height = H;
   const g = c.getContext('2d');
-  const text = (t, x, y, size, color, weight, align) => {
-    g.font = (weight || 400) + ' ' + size + 'px ' + F; g.fillStyle = color; g.textAlign = align || 'left'; g.fillText(t, x, y); };
-  const fit = (t, size, weight, w) => { g.font = (weight || 400) + ' ' + size + 'px ' + F;
+  const font = (size, weight, italic) => { g.font = (italic ? 'italic ' : '') + (weight || 400) + ' ' + size + 'px ' + F; };
+  const text = (t, x, y, size, color, weight, align, italic) => { font(size, weight, italic); g.fillStyle = color; g.textAlign = align || 'left'; g.fillText(t, x, y); };
+  const fit = (t, size, weight, w) => { font(size, weight);
     if (g.measureText(t).width <= w) return t; while (t.length > 1 && g.measureText(t + '…').width > w) t = t.slice(0, -1); return t + '…'; };
   const round = (x, y, w, h, r, color) => { g.fillStyle = color; g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r);
     g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.fill(); };
-  const red = '#E00000', ink = '#2C2C2A', grey = '#8A8983';
+  const box = (x, y, w, h, color) => { g.fillStyle = color; g.fillRect(x, y, w, h); };
+  const red = '#E00000', ink = '#2C2C2A', grey = '#8A8983', orange = '#B36B00', line = '#E2E0D8';
+  const look = r => r.a < 0 || (r.cells && r.cells.some(v => v < 0)) ? red : r.e ? grey : r.h ? orange : ink;
 
-  g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, W, H);
-  round(P, P, W - 2 * P, 230, 36, '#085041');
+  box(0, 0, W, H, '#FFFFFF');
+  round(P, P, CW - 2 * P, 230, 36, '#085041');
   text('AE  ·  ' + st.month, P + 50, P + 85, 40, '#FFFFFF', 400);
   text(money(total), P + 50, P + 180, 86, '#FFFFFF', 500);
   let y = P + 230 + 90;
-  text('รายการเดือนนี้  (' + rows.length + ')', P, y, 32, grey, 400); y += 30;
-  if (!rows.length) { text('ไม่มีรายการ', P, y + 60, 34, grey); y += 100; }
-  rows.forEach(it => {
-    const amt = money(it.a); g.font = '500 38px ' + F; const aw = g.measureText(amt).width;
-    const name = it.c + (it.t ? '  ·  ' + it.t : '');
-    const info = [it.k, it.n > 1 ? 'งวด ' + it.k1 + '/' + it.n : '', it.h ? 'หาร 2' : '', it.e ? 'EST' : ''].filter(Boolean).join('  ·  ');
-    text(fit(name, 36, 400, W - 2 * P - aw - 40), P, y + 52, 36, it.a < 0 ? red : ink, 400);
-    text(info, P, y + 88, 26, it.a < 0 ? red : grey, 400);
-    text(amt, W - P, y + 52, 38, it.a < 0 ? red : ink, 500, 'right');
-    g.fillStyle = '#E2E0D8'; g.fillRect(P, y + 100, W - 2 * P, 2);
-    y += 100;
+  text('รายการเดือนนี้', P, y, 32, grey, 400); y += 20;
+  if (!now.length) { text('ไม่มีรายการ', P, y + 60, 34, grey); y += 100; }
+  cats.forEach(cat => {
+    text(cat.c, P, y + 56, 34, ink, 500); text(money(cat.total), CW - P, y + 56, 34, cat.total < 0 ? red : ink, 500, 'right');
+    box(P, y + 74, CW - 2 * P, 2, '#085041'); y += 76;
+    cat.items.forEach(it => {
+      const amt = money(it.a); font(32, 400); const aw = g.measureText(amt).width;
+      const info = [it.n > 1 ? 'งวด ' + it.k1 + '/' + it.n : '', it.h ? 'หาร 2' : '', it.e ? 'EST' : ''].filter(Boolean).join('  ·  ');
+      text(fit(it.t || '-', 32, 400, CW - 2 * P - 30 - aw - 40), P + 30, y + (info ? 42 : 54), 32, look(it), 400, 'left', it.e);
+      if (info) text(info, P + 30, y + 76, 24, it.a < 0 ? red : grey, 400);
+      text(amt, CW - P, y + 54, 32, look(it), 400, 'right', it.e);
+      box(P + 30, y + 86, CW - 2 * P - 30, 2, line); y += 88;
+    });
   });
-  if (later.length) {
-    y += 70;
-    text('ยอดที่จะมาในเดือนต่อไป', P, y, 32, grey, 400); y += 40;
-    later.forEach(([lab, v]) => {
-      text(lab, P, y + 44, 34, ink, 400); text(money(v), W - P, y + 44, 34, v < 0 ? red : ink, 400, 'right'); y += 62; });
-    round(P, y + 14, W - 2 * P, 76, 20, '#F2F1EC');
-    text('รวมหนี้ในอนาคต', P + 30, y + 64, 34, ink, 500); text(money(laterSum), W - P - 30, y + 64, 36, ink, 500, 'right');
+  if (months.length) {
     y += 90;
+    text('ยอดแต่ละเดือน', P, y, 32, grey, 400); y += 20;
+    const tw = NW + months.length * MW, cx = j => P + NW + (j + 1) * MW - 16;
+    // header
+    box(P, y, tw, RH, '#1D9E75');
+    text('CATEGORY · TAG', P + 16, y + 36, 24, '#FFFFFF', 500);
+    months.forEach((i, j) => { if (i === m) box(P + NW + j * MW, y, MW, RH, '#FAC775');
+      text(label(i), cx(j), y + 36, 24, i === m ? '#412402' : '#FFFFFF', 500, 'right'); });
+    y += RH;
+    // total
+    box(P, y, tw, RH, '#085041');
+    text('TOTAL', P + 16, y + 36, 24, '#FFFFFF', 500);
+    colTotal.forEach((v, j) => text(money(v), cx(j), y + 36, 24, '#FFFFFF', 500, 'right'));
+    y += RH;
+    rows.forEach((r, n) => {
+      if (n % 2) box(P, y, tw, RH, '#F7F6F2');
+      const col = look(r);
+      text(fit(r.name, 24, 400, NW - 32), P + 16, y + 36, 24, col, 400, 'left', r.e);
+      r.cells.forEach((v, j) => { if (Math.abs(v) > .004) text(money(v), cx(j), y + 36, 24, v < 0 ? red : col, 400, 'right', r.e); });
+      y += RH;
+    });
+    box(P, y, tw, 2, line);
+    text('สีส้ม = หาร 2   ·   สีเทา = EST (ประมาณการ)   ·   สีแดง = ยอดติดลบ', P, y + 50, 24, grey, 400);
+    y += 70;
   }
   const d = new Date();
-  text('Money  ·  ' + d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear(), W / 2, H - 40, 24, grey, 400, 'center');
+  text('Money  ·  ' + d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear(), CW / 2, H - 40, 24, grey, 400, 'center');
   return c;
 }
 let shotFile = null;
-$('share').onclick = () => {
-  if (!(data.ae || []).length && DEMO) { toast('โหมด DEMO'); }
+function shareAe() {
   const c = drawAe(), url = c.toDataURL('image/png');
   const bin = atob(url.split(',')[1]), bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   shotFile = new File([bytes], 'AE-' + st.month + '.png', { type: 'image/png' });
   $('shotImg').src = url; $('shot').classList.add('show'); $('shotBox').scrollTop = 0;
-};
+}
 $('shotClose').onclick = () => $('shot').classList.remove('show');
 $('shotSend').onclick = async () => {
   if (navigator.canShare && navigator.canShare({ files: [shotFile] })) { try { await navigator.share({ files: [shotFile] }); } catch (e) {} }
