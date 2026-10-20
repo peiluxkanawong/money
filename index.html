@@ -26,7 +26,7 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'Kanit',system-ui,sans-serif;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
-body{display:flex;flex-direction:column;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 14px calc(env(safe-area-inset-bottom) + 10px);position:fixed;inset:0;overflow:hidden}
+body{display:flex;flex-direction:column;gap:8px;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 10px);position:fixed;inset:0;height:var(--appH,auto);overflow:hidden}
 button{font-family:inherit;color:inherit}
 
 /* month card: one month at a time, swipe left / right */
@@ -36,7 +36,7 @@ button{font-family:inherit;color:inherit}
 #mLabel{font-size:15px;opacity:.9}
 #mTotal{font-size:24px;font-weight:500;line-height:1.2}
 #mSplit{text-align:right;font-size:12px;line-height:1.6;opacity:.95}
-#bills{margin-top:4px;font-size:11px;border:1px solid rgba(255,255,255,.5);border-radius:10px;padding:2px 8px;background:none;color:#fff}
+#share{margin-top:4px;font-size:11px;border:1px solid rgba(255,255,255,.5);border-radius:10px;padding:2px 8px;background:none;color:#fff}
 #pending{position:absolute;top:-6px;right:10px;background:#BA7517;color:#fff;font-size:10px;border-radius:8px;padding:1px 7px;display:none}
 #demo{position:absolute;top:-6px;left:10px;background:#888;color:#fff;font-size:10px;border-radius:8px;padding:1px 7px;display:none}
 
@@ -89,10 +89,18 @@ button{font-family:inherit;color:inherit}
 #keys .save{background:var(--green2);color:#fff;font-size:21px;font-weight:500}
 #keys button:active{filter:brightness(.92)}
 
+/* picture for AE */
+#shot{position:fixed;inset:0;height:var(--appH,auto);z-index:6;background:rgba(0,0,0,.88);display:none;flex-direction:column;gap:10px;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 10px)}
+#shot.show{display:flex}
+#shotBox{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;border-radius:14px}
+#shotImg{display:block;width:100%;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
+.shotBtns{flex:none;display:flex;gap:10px}
+.shotBtns button{flex:1;height:52px;border:none;border-radius:14px;font-size:17px;background:#333;color:#fff}
+.shotBtns #shotSend{background:var(--green2);flex:2}
 /* ranking: new spending of the month, biggest first */
 #mMain{background:none;border:none;color:#fff;text-align:left;padding:0}
 #mLabel i{font-size:14px;margin-left:4px;opacity:.8}
-#top{position:fixed;inset:0;z-index:5;background:var(--bg);display:none;flex-direction:column;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 14px calc(env(safe-area-inset-bottom) + 10px)}
+#top{position:fixed;inset:0;height:var(--appH,auto);z-index:5;background:var(--bg);display:none;flex-direction:column;gap:8px;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 10px)}
 #top.show{display:flex}
 #topHead{flex:none;position:relative;background:var(--green);color:#fff;border-radius:16px;padding:10px 40px;display:flex;align-items:center;justify-content:space-between;touch-action:pan-y}
 #topHead .nav{position:absolute;top:0;bottom:0;width:36px;display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.7;background:none;border:none;color:#fff}
@@ -127,7 +135,7 @@ button{font-family:inherit;color:inherit}
   <button class="nav l" id="prev" aria-label="Previous month"><i class="ti ti-chevron-left"></i></button>
   <button id="mMain" aria-label="Ranking"><div id="mLabel">Oct-26</div><div id="mTotal">0.00</div></button>
   <div id="mSplit"><div>AE <span id="mAe">0.00</span></div><div>PEI <span id="mPei">0.00</span></div>
-    <button id="bills"><i class="ti ti-receipt"></i> บิลรายเดือน</button></div>
+    <button id="share"><i class="ti ti-photo"></i> ส่งให้ AE</button></div>
   <button class="nav r" id="next" aria-label="Next month"><i class="ti ti-chevron-right"></i></button>
   <span id="pending"></span><span id="demo">DEMO</span>
 </div>
@@ -157,6 +165,10 @@ button{font-family:inherit;color:inherit}
   </div>
   <div id="topNote">ใช้อะไรเยอะสุด · ไม่รวมงวดผ่อนจากเดือนก่อน · แตะหมวดเพื่อดู TAG</div>
   <div id="topList"></div>
+</div>
+<div id="shot">
+  <div id="shotBox"><img id="shotImg" alt="AE"></div>
+  <div class="shotBtns"><button id="shotClose"><i class="ti ti-x"></i> ปิด</button><button id="shotSend"><i class="ti ti-share"></i> แชร์ / บันทึกรูป</button></div>
 </div>
 <div id="toast"></div>
 
@@ -193,6 +205,9 @@ const DEMO_DATA = {
   top: { 'Oct-26': [['MONTHLY', 9150, [['MEA', 4850], ['TRUE CORP.', 2100], ['NETFLIX', 419], ['CLAUDE', 3781]]],
                     ['MEAL', 3920.5, [['GRAB', 2410.5], ['LINEMAN', 1510]]], ['TOBA&SHOTA', 2400, [['KASTY', 2400]]],
                     ['SHOPPING', 1980, [['SHOPEE', 1980]]]] },
+  ae: [{ c:'MEAL', t:'GRAB', k:'TMRW', s:'Oct-26', n:1, a:1250.5, x:[], e:0, h:1 }, { c:'SHOPPING', t:'IPAD', k:'SO SMART', s:'Aug-26', n:10, a:2490, x:[], e:0, h:0 },
+       { c:'MONTHLY', t:'MEA', k:'LINE', s:'Oct-26', n:1, a:2425, x:[], e:1, h:1 }, { c:'CARD', t:'CASHBACK', k:'TMRW', s:'Oct-26', n:1, a:-120, x:[], e:0, h:0 },
+       { c:'KIDS', t:'SCHOOL', k:'CENTRAL', s:'Oct-26', n:6, a:3000, x:[], e:0, h:1 }],
   totals: { 'Sep-26':[54109.44,16659.64,37449.80], 'Oct-26':[74856.57,16931.39,57925.18], 'Nov-26':[85845.32,21579.67,64265.66],
             'Dec-26':[62884.66,18301.67,44583.00], 'Jan-27':[52178.99,15701.67,36477.32] },
   now: label(new Date().getFullYear() * 12 + new Date().getMonth()),
@@ -201,8 +216,8 @@ const DEMO_DATA = {
 let data = store.get(DATA_KEY, null) || (DEMO ? DEMO_DATA : { cards: [], cats: [], tags: [], totals: {}, now: DEMO_DATA.now });
 let queue = store.get(QUEUE_KEY, []);
 const st = { month: data.now, card: null, inst: 0, cat: null, who: 'PEI', tags: [], amt: '0' };
-// until the user taps a card / category, they follow the latest-used one from the sheet
-const picked = { card: false, cat: false };
+// until the user taps a card, it follows the latest-used one from the sheet; CATEGORY starts empty
+const picked = { card: false };
 
 const $ = id => document.getElementById(id);
 let toastTimer;
@@ -302,17 +317,17 @@ const newChip = (cls, term, list) => term && list.indexOf(term) < 0
 
 function drawCats() {
   const cats = data.cats || [];
-  if (!st.cat || cats.indexOf(st.cat) < 0) st.cat = cats[0] || '';
+  if (st.cat && cats.indexOf(st.cat) < 0) st.cat = '';
   const term = norm(find.cat), shown = term ? cats.filter(c => c.indexOf(term) >= 0) : cats;
   $('cats').innerHTML = shown.map(c => `<button class="cat ${c === st.cat ? 'on' : ''}" data-v="${esc(c)}"><i class="ti ti-${ICONS[c] || 'circle-dot'}"></i><span>${esc(c)}</span></button>`).join('')
     + newChip('cat', term, cats);
   $('cats').querySelectorAll('button').forEach(b => b.onclick = () => {
-    const v = b.dataset.v || b.dataset.new, changed = v !== st.cat;
+    const v = b.dataset.v || b.dataset.new, was = st.cat;
     if (b.dataset.new) data.cats = [v].concat(cats);
-    st.cat = v; picked.cat = true;
+    st.cat = b.dataset.new || term || v !== st.cat ? v : '';    // tap again = unselect
     if (term) closeFind('cat');
     drawCats(); if (term) showOn('cats');
-    if (changed) { drawTags(); $('tags').scrollLeft = 0; }
+    if (st.cat !== was) { drawTags(); $('tags').scrollLeft = 0; }
   });
 }
 // tags already used with the chosen CATEGORY come first, then the rest (both latest first)
@@ -383,8 +398,8 @@ function save() {
   applyLocally(row);
   const c = cardList().find(x => x.name === st.card);
   toast('บันทึก ' + money(amount) + ' → ' + st.month + ' · ' + (c ? c.short : '') + ' · ' + st.cat);
-  st.amt = '0'; st.tags = []; st.inst = 0;
-  picked.card = picked.cat = false;
+  st.amt = '0'; st.tags = []; st.inst = 0; st.cat = '';
+  picked.card = false;
   closeFind('cat'); closeFind('tag');
   drawAll(); $('cats').scrollLeft = 0; $('tags').scrollLeft = 0;
   sync();
@@ -406,6 +421,9 @@ function applyLocally(row) {
   if (!t) c[2].push(t = [tag, 0]);
   c[1] += first; t[1] += first;
   c[2].sort((a, b) => b[1] - a[1]); top.sort((a, b) => b[1] - a[1]);
+  if (row.who !== 'PEI') (data.ae = data.ae || []).push({ c: row.cat, t: row.tags.split(', ').filter(t => t && t !== 'EST').join(', '),
+    k: (cardList().find(x => x.name === row.card) || { short: row.card }).short, s: row.month, n: row.months,
+    a: Math.round(row.amount / row.months * (row.who === 'AE' ? 1 : .5) * 100) / 100, x: [], e: row.tags.split(', ').indexOf('EST') >= 0 ? 1 : 0, h: row.who === 'PEI+AE' ? 1 : 0 });
   const front = (arr, v, key) => [v].concat((arr || []).filter(x => (key ? key(x) : x) !== (key ? key(v) : v)));
   const card = cardList().find(c => c.name === row.card);
   if (card) data.cards = front(data.cards, card, c => c.name);
@@ -437,22 +455,79 @@ async function call(body) {
   return j;
 }
 function takeData(res) {
-  data = { cards: res.cards, cats: res.cats, tags: res.tags, catTags: res.catTags || {}, top: res.top || {}, totals: res.totals, now: res.now };
+  data = { cards: res.cards, cats: res.cats, tags: res.tags, catTags: res.catTags || {}, top: res.top || {}, ae: res.ae || [], totals: res.totals, now: res.now };
   queue.forEach(applyLocally);                // rows still waiting are not in the sheet yet
   store.set(DATA_KEY, data);
   if (!picked.card && data.cards.length) st.card = data.cards[0].name;
-  if (!picked.cat && data.cats.length) st.cat = data.cats[0];
   drawAll();
 }
 
-/* ---------- monthly bills (EST from the max of the 3 months before) ---------- */
-$('bills').onclick = async () => {
-  if (DEMO) { toast('โหมด DEMO: ต่อชีตก่อนถึงจะใช้ได้'); return; }
-  if (!navigator.onLine) { toast('ต้องต่อเน็ตก่อน'); return; }
-  if (!confirm('สร้างบิลรายเดือน (EST) ของ ' + st.month + '?\nใช้ยอดสูงสุดของ 3 เดือนก่อน เฉพาะ MONTHLY')) return;
-  try { const res = await call({ action: 'monthly', month: st.month }); takeData(res);
-        toast(res.made ? 'เพิ่ม EST ' + res.made + ' รายการใน ' + st.month : 'ไม่มีบิลที่ต้องเพิ่ม'); }
-  catch (e) { toast('ทำไม่สำเร็จ: ' + e.message); }
+/* ---------- picture for AE: this month + what is still to come ---------- */
+function aeOn(it, i) { const s = index(it.s); return i >= s && i < s + it.n && it.x.indexOf(label(i)) < 0; }
+function drawAe() {
+  const m = index(st.month), list = data.ae || [];
+  const rows = list.filter(it => aeOn(it, m)).map(it => Object.assign({ k1: m - index(it.s) + 1 }, it)).sort((a, b) => b.a - a.a);
+  const total = rows.reduce((a, it) => a + it.a, 0);
+  let last = m; list.forEach(it => { last = Math.max(last, index(it.s) + it.n - 1); });
+  const later = [];
+  for (let i = m + 1; i <= last; i++) { const v = list.filter(it => aeOn(it, i)).reduce((a, it) => a + it.a, 0); if (Math.abs(v) > .004) later.push([label(i), v]); }
+  const laterSum = later.reduce((a, x) => a + x[1], 0);
+
+  const W = 1080, P = 60, F = "'Kanit', sans-serif";
+  const H = 330 + 70 + Math.max(1, rows.length) * 100 + (later.length ? 70 + 40 + later.length * 62 + 90 : 0) + 100;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  const text = (t, x, y, size, color, weight, align) => {
+    g.font = (weight || 400) + ' ' + size + 'px ' + F; g.fillStyle = color; g.textAlign = align || 'left'; g.fillText(t, x, y); };
+  const fit = (t, size, weight, w) => { g.font = (weight || 400) + ' ' + size + 'px ' + F;
+    if (g.measureText(t).width <= w) return t; while (t.length > 1 && g.measureText(t + '…').width > w) t = t.slice(0, -1); return t + '…'; };
+  const round = (x, y, w, h, r, color) => { g.fillStyle = color; g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.fill(); };
+  const red = '#E00000', ink = '#2C2C2A', grey = '#8A8983';
+
+  g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, W, H);
+  round(P, P, W - 2 * P, 230, 36, '#085041');
+  text('AE  ·  ' + st.month, P + 50, P + 85, 40, '#FFFFFF', 400);
+  text(money(total), P + 50, P + 180, 86, '#FFFFFF', 500);
+  let y = P + 230 + 90;
+  text('รายการเดือนนี้  (' + rows.length + ')', P, y, 32, grey, 400); y += 30;
+  if (!rows.length) { text('ไม่มีรายการ', P, y + 60, 34, grey); y += 100; }
+  rows.forEach(it => {
+    const amt = money(it.a); g.font = '500 38px ' + F; const aw = g.measureText(amt).width;
+    const name = it.c + (it.t ? '  ·  ' + it.t : '');
+    const info = [it.k, it.n > 1 ? 'งวด ' + it.k1 + '/' + it.n : '', it.h ? 'หาร 2' : '', it.e ? 'EST' : ''].filter(Boolean).join('  ·  ');
+    text(fit(name, 36, 400, W - 2 * P - aw - 40), P, y + 52, 36, it.a < 0 ? red : ink, 400);
+    text(info, P, y + 88, 26, it.a < 0 ? red : grey, 400);
+    text(amt, W - P, y + 52, 38, it.a < 0 ? red : ink, 500, 'right');
+    g.fillStyle = '#E2E0D8'; g.fillRect(P, y + 100, W - 2 * P, 2);
+    y += 100;
+  });
+  if (later.length) {
+    y += 70;
+    text('ยอดที่จะมาในเดือนต่อไป', P, y, 32, grey, 400); y += 40;
+    later.forEach(([lab, v]) => {
+      text(lab, P, y + 44, 34, ink, 400); text(money(v), W - P, y + 44, 34, v < 0 ? red : ink, 400, 'right'); y += 62; });
+    round(P, y + 14, W - 2 * P, 76, 20, '#F2F1EC');
+    text('รวมหนี้ในอนาคต', P + 30, y + 64, 34, ink, 500); text(money(laterSum), W - P - 30, y + 64, 36, ink, 500, 'right');
+    y += 90;
+  }
+  const d = new Date();
+  text('Money  ·  ' + d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear(), W / 2, H - 40, 24, grey, 400, 'center');
+  return c;
+}
+let shotFile = null;
+$('share').onclick = () => {
+  if (!(data.ae || []).length && DEMO) { toast('โหมด DEMO'); }
+  const c = drawAe(), url = c.toDataURL('image/png');
+  const bin = atob(url.split(',')[1]), bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  shotFile = new File([bytes], 'AE-' + st.month + '.png', { type: 'image/png' });
+  $('shotImg').src = url; $('shot').classList.add('show'); $('shotBox').scrollTop = 0;
+};
+$('shotClose').onclick = () => $('shot').classList.remove('show');
+$('shotSend').onclick = async () => {
+  if (navigator.canShare && navigator.canShare({ files: [shotFile] })) { try { await navigator.share({ files: [shotFile] }); } catch (e) {} }
+  else toast('กดค้างที่รูปเพื่อบันทึก');
 };
 
 /* ---------- helpers ---------- */
@@ -466,6 +541,8 @@ function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<':
 function drawAll() { drawMonth(); drawPickers(); drawCats(); drawTags(); drawAmount(); }
 
 // iOS slides the page up for the keyboard and can leave it there; put it back when the keyboard goes
+// iOS home-screen app: the page can come out shorter than the screen, leaving a gap at the bottom
+if (navigator.standalone && screen.height > innerHeight) document.documentElement.style.setProperty('--appH', screen.height + 'px');
 const unshift = () => setTimeout(() => { if (!document.querySelector("input:focus")) window.scrollTo(0, 0); }, 50);
 document.addEventListener("focusout", unshift);
 if (window.visualViewport) visualViewport.addEventListener("resize", unshift);
