@@ -30,28 +30,28 @@ body{display:flex;flex-direction:column;gap:8px;padding:calc(env(safe-area-inset
 button{font-family:inherit;color:inherit}
 
 /* month card: one month at a time, swipe left / right */
-#month{flex:none;position:relative;background:var(--green);color:#fff;border-radius:16px;padding:10px 40px;display:flex;align-items:center;justify-content:space-between;touch-action:pan-y}
+#month{flex:none;position:relative;background:var(--green);color:#fff;border-radius:16px;padding:20px 40px;display:flex;align-items:center;justify-content:space-between;touch-action:pan-y;cursor:pointer}
 #month .nav{position:absolute;top:0;bottom:0;width:36px;display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.7;background:none;border:none;color:#fff}
 #month .nav.l{left:0} #month .nav.r{right:0}
 #mLabel{font-size:15px;opacity:.9}
-#mTotal{font-size:24px;font-weight:500;line-height:1.2}
-#mSplit{text-align:right;font-size:12px;line-height:1.6;opacity:.95}
+#mTotal{font-size:28px;font-weight:500;line-height:1.2}
+#mSplit{text-align:right;font-size:13px;line-height:1.7;opacity:.95}
 #share{margin-left:2px;border:none;background:none;color:#fff;font-size:15px;padding:0 4px;opacity:.8;vertical-align:baseline}
 #pending{position:absolute;top:-6px;right:10px;background:var(--tag);color:#fff;font-size:10px;border-radius:8px;padding:1px 7px;display:none}
 #demo{position:absolute;top:-6px;left:10px;background:#B8A99A;color:#fff;font-size:10px;border-radius:8px;padding:1px 7px;display:none}
 
-#amountBox{flex:none;text-align:center}
-#amount{font-size:44px;font-weight:500;line-height:1.1}
-#amount small{font-size:22px;color:var(--muted);font-weight:400}
+#amountBox{flex:none;text-align:center;padding:8px 0 2px}
+#amount{font-size:56px;font-weight:500;line-height:1.1}
+#amount small{font-size:26px;color:var(--muted);font-weight:400}
 #per{font-size:12px;color:var(--sh);height:16px}
 
 /* card + installment: one value, swipe up / down */
 .pickers{flex:none;display:flex;gap:8px}
-.picker{position:relative;flex:1;height:58px;border-radius:14px;background:var(--soft);display:flex;align-items:center;justify-content:center;touch-action:pan-x}
-.picker .cap{position:absolute;top:5px;left:12px;font-size:10px;color:var(--muted)}
-.picker .val{font-size:19px;font-weight:500}
+.picker{position:relative;flex:1;height:44px;border-radius:14px;background:var(--soft);display:flex;align-items:center;justify-content:center;touch-action:pan-x}
+.picker .cap{position:absolute;top:50%;transform:translateY(-50%);left:12px;font-size:10px;color:var(--muted)}
+.picker .val{font-size:16px;font-weight:500}
 .picker .ar{position:absolute;right:6px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center}
-.picker .ar button{border:none;background:none;color:var(--muted);font-size:15px;height:24px;width:28px;padding:0}
+.picker .ar button{border:none;background:none;color:var(--muted);font-size:14px;height:20px;width:28px;padding:0}
 
 .strip{flex:none;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .strip::-webkit-scrollbar{display:none}
@@ -77,8 +77,8 @@ button{font-family:inherit;color:inherit}
 #chosen span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #chosen button{border:none;background:none;color:var(--muted);font-size:16px;padding:0}
 
-#who{flex:none;display:flex;background:var(--soft);border-radius:12px;padding:3px}
-#who button{flex:1;height:44px;border:none;background:none;border-radius:10px;font-size:15px;color:var(--muted)}
+#who{flex:none;display:flex;background:var(--soft);border-radius:17px;padding:2px}
+#who button{flex:1;height:30px;border:none;background:none;border-radius:15px;font-size:13px;color:var(--muted)}
 #who button.on[data-w="PEI"]{background:var(--bg);color:var(--text)}
 #who button.on[data-w="AE"]{background:var(--aeBg);color:var(--ae)}
 #who button.on[data-w="PEI+AE"]{background:var(--shBg);color:var(--sh)}
@@ -99,7 +99,7 @@ button{font-family:inherit;color:inherit}
 .shotBtns #shotSend{background:var(--green2);flex:2}
 /* ranking: new spending of the month, biggest first */
 #mMain{color:#fff;cursor:pointer}
-#mLabel i{font-size:14px;margin-left:4px;opacity:.8}
+#rank{margin-left:2px;border:none;background:none;color:#fff;font-size:15px;padding:0 4px;opacity:.8;vertical-align:baseline}
 #top{position:fixed;inset:0;height:var(--appH,auto);z-index:5;background:var(--bg);display:none;flex-direction:column;gap:8px;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 10px)}
 #top.show{display:flex}
 #topHead{flex:none;position:relative;background:var(--green);color:#fff;border-radius:16px;padding:10px 40px;display:flex;align-items:center;justify-content:space-between;touch-action:pan-y}
@@ -137,7 +137,7 @@ button{font-family:inherit;color:inherit}
 
 <div id="month">
   <button class="nav l" id="prev" aria-label="Previous month"><i class="ti ti-chevron-left"></i></button>
-  <div id="mMain" role="button" aria-label="Ranking"><div id="mLabel">Oct-26</div><div id="mTotal">0.00</div></div>
+  <div id="mMain"><div id="mLabel">Oct-26</div><div id="mTotal">0.00</div></div>
   <div id="mSplit"><div>AE <span id="mAe">0.00</span></div><div>PEI <span id="mPei">0.00</span></div></div>
   <button class="nav r" id="next" aria-label="Next month"><i class="ti ti-chevron-right"></i></button>
   <span id="pending"></span><span id="demo">DEMO</span>
@@ -246,7 +246,7 @@ function shiftMonth(d) {
 }
 function drawMonth() {
   const t = (data.totals || {})[st.month] || [0, 0, 0];
-  $('mLabel').innerHTML = esc(st.month) + '<i class="ti ti-chart-bar"></i><button id="share" aria-label="Picture for AE"><i class="ti ti-send"></i></button>';
+  $('mLabel').innerHTML = esc(st.month) + '<button id="rank" aria-label="Ranking"><i class="ti ti-chart-bar"></i></button><button id="share" aria-label="Picture for AE"><i class="ti ti-send"></i></button>';
   $('mTotal').textContent = money(t[0]);
   $('mAe').textContent = money(t[1]);
   $('mPei').textContent = money(t[2]);
@@ -276,7 +276,10 @@ function drawTop() {
     + '</div>').join('');
   $('topList').querySelectorAll('.tr').forEach(r => r.onclick = () => { const i = +r.dataset.i; topOpen = topOpen === i ? -1 : i; drawTop(); });
 }
-$('mMain').onclick = e => { if (e.target.closest('#share')) { shareAe(); return; } topOpen = -1; $('top').classList.add('show'); drawTop(); $('topList').scrollTop = 0; };
+// tap the bar = open the Data sheet; chart icon = ranking; send icon = picture for AE
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/19jS2PcLE8v7kmNFQGwLFcnuit5IK5U3qeIiEdXdICYI/edit';
+$('month').onclick = e => { if (e.target.closest('.nav')) return; if (e.target.closest('#share')) { shareAe(); return; }
+  if (!e.target.closest('#rank')) { window.open(SHEET_URL, '_blank'); return; } topOpen = -1; $('top').classList.add('show'); drawTop(); $('topList').scrollTop = 0; };
 document.querySelectorAll('#topWho button').forEach(b => b.onclick = () => { topWho = b.dataset.w; topOpen = -1; drawTop(); });
 $('topClose').onclick = () => $('top').classList.remove('show');
 $('tPrev').onclick = () => { topOpen = -1; shiftMonth(-1); };
