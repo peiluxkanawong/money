@@ -79,9 +79,9 @@ button{font-family:inherit;color:inherit}
 
 #who{flex:none;display:flex;background:var(--soft);border-radius:17px;padding:2px}
 #who button{flex:1;height:30px;border:none;background:none;border-radius:15px;font-size:13px;color:var(--muted)}
-#who button.on[data-w="PEI"]{background:var(--bg);color:var(--text)}
-#who button.on[data-w="AE"]{background:var(--aeBg);color:var(--ae)}
-#who button.on[data-w="PEI+AE"]{background:var(--shBg);color:var(--sh)}
+#who button.on:nth-child(1){background:var(--bg);color:var(--text)}
+#who button.on:nth-child(2){background:var(--aeBg);color:var(--ae)}
+#who button.on:nth-child(3){background:var(--shBg);color:var(--sh)}
 
 #keys{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:8px}
 #keys button{border:none;border-radius:14px;background:var(--soft);font-size:26px}
@@ -138,7 +138,7 @@ button{font-family:inherit;color:inherit}
 <div id="month">
   <button class="nav l" id="prev" aria-label="Previous month"><i class="ti ti-chevron-left"></i></button>
   <div id="mMain"><div id="mLabel">Oct-26</div><div id="mTotal">0.00</div></div>
-  <div id="mSplit"><div>AE <span id="mAe">0.00</span></div><div>PEI <span id="mPei">0.00</span></div></div>
+  <div id="mSplit"><div><span class="nOther">AE</span> <span id="mAe">0.00</span></div><div><span class="nMe">PEI</span> <span id="mPei">0.00</span></div></div>
   <button class="nav r" id="next" aria-label="Next month"><i class="ti ti-chevron-right"></i></button>
   <span id="pending"></span><span id="demo">DEMO</span>
 </div>
@@ -166,7 +166,7 @@ button{font-family:inherit;color:inherit}
     <button id="topClose"><i class="ti ti-x"></i> ปิด</button>
     <button class="nav r" id="tNext" aria-label="Next month"><i class="ti ti-chevron-right"></i></button>
   </div>
-  <div id="topWho"><button data-w="all" class="on">ALL</button><button data-w="ae">AE</button><button data-w="pei">PEI</button></div>
+  <div id="topWho"><button data-w="all" class="on">ALL</button><button data-w="ae" class="nOther">AE</button><button data-w="pei" class="nMe">PEI</button></div>
   <div id="topNote">เรียงจากมากไปน้อย · งวดผ่อนจากเดือนก่อนรวมใน PREVIOUS DEBT · แตะหมวดเพื่อดู TAG</div>
   <div id="topList"></div>
 </div>
@@ -222,7 +222,7 @@ const DEMO_DATA = {
 
 let data = store.get(DATA_KEY, null) || (DEMO ? DEMO_DATA : { cards: [], cats: [], tags: [], totals: {}, now: DEMO_DATA.now });
 let queue = store.get(QUEUE_KEY, []);
-const st = { month: data.now, card: null, inst: 0, cat: null, who: 'PEI', tags: [], amt: '0' };
+const st = { month: data.now, card: null, inst: 0, cat: null, who: '', whoI: 0, tags: [], amt: '0' };
 // reopen on the month picked last time (unless it is already in the past)
 { const m = store.get(MONTH_KEY, null); if (index(m) >= index(data.now) && monthList().indexOf(m) >= 0) st.month = m; }
 // until the user taps a card, it follows the latest-used one from the sheet; CATEGORY starts empty
@@ -279,7 +279,7 @@ function drawTop() {
 // tap the bar = open the Data sheet; chart icon = ranking; send icon = picture for AE
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/19jS2PcLE8v7kmNFQGwLFcnuit5IK5U3qeIiEdXdICYI/edit';
 $('month').onclick = e => { if (e.target.closest('.nav')) return; if (e.target.closest('#share')) { shareAe(); return; }
-  if (!e.target.closest('#rank')) { window.open(SHEET_URL, '_blank'); return; } topOpen = -1; $('top').classList.add('show'); drawTop(); $('topList').scrollTop = 0; };
+  if (!e.target.closest('#rank')) { window.open(data.sheet || SHEET_URL, '_blank'); return; } topOpen = -1; $('top').classList.add('show'); drawTop(); $('topList').scrollTop = 0; };
 document.querySelectorAll('#topWho button').forEach(b => b.onclick = () => { topWho = b.dataset.w; topOpen = -1; drawTop(); });
 $('topClose').onclick = () => $('top').classList.remove('show');
 $('tPrev').onclick = () => { topOpen = -1; shiftMonth(-1); };
@@ -367,8 +367,17 @@ function drawTags() {
 $('clear').onclick = () => { st.tags = []; drawTags(); };
 
 /* ---------- who ---------- */
-document.querySelectorAll('#who button').forEach(b => b.onclick = () => {
-  st.who = b.dataset.w; document.querySelectorAll('#who button').forEach(x => x.classList.toggle('on', x === b)); });
+// names come from the sheet (Data header "PEI | AE" -> me = PEI, other = AE)
+function who3() { const n = data.names || ['PEI', 'AE']; return [n[0], n[1], n[0] + '+' + n[1]]; }
+function drawNames() {
+  const w = who3();
+  st.who = w[st.whoI];
+  document.querySelectorAll('#who button').forEach((b, i) => { b.dataset.w = b.textContent = w[i]; b.classList.toggle('on', w[i] === st.who); });
+  document.querySelectorAll('.nMe').forEach(x => x.textContent = w[0]);
+  document.querySelectorAll('.nOther').forEach(x => x.textContent = w[1]);
+}
+document.querySelectorAll('#who button').forEach((b, i) => b.onclick = () => {
+  st.whoI = i; st.who = b.dataset.w; document.querySelectorAll('#who button').forEach(x => x.classList.toggle('on', x === b)); });
 
 /* ---------- keypad ---------- */
 function drawAmount() {
@@ -421,7 +430,7 @@ function save() {
 // so the totals and the "latest used" order are right before the sheet answers
 function applyLocally(row) {
   const per = row.amount / row.months, start = index(row.month);
-  const aeShare = row.who === 'AE' ? 1 : row.who === 'PEI+AE' ? .5 : 0;
+  const W = who3(), aeShare = row.who === W[1] ? 1 : row.who === W[2] ? .5 : 0;
   data.totals = data.totals || {};
   for (let k = 0; k < row.months; k++) {
     const t = data.totals[label(start + k)] = data.totals[label(start + k)] || [0, 0, 0];
@@ -439,9 +448,9 @@ function applyLocally(row) {
     c[1] += first; t[1] += first;
     c[2].sort((a, b) => b[1] - a[1]); top.sort((a, b) => b[1] - a[1]);
   });
-  if (row.who !== 'PEI') (data.ae = data.ae || []).push({ c: row.cat, t: row.tags.split(', ').filter(t => t && t !== 'EST').join(', '),
+  if (row.who !== W[0]) (data.ae = data.ae || []).push({ c: row.cat, t: row.tags.split(', ').filter(t => t && t !== 'EST').join(', '),
     k: (cardList().find(x => x.name === row.card) || { short: row.card }).short, s: row.month, n: row.months,
-    a: Math.round(row.amount / row.months * (row.who === 'AE' ? 1 : .5) * 100) / 100, x: [], e: row.tags.split(', ').indexOf('EST') >= 0 ? 1 : 0, h: row.who === 'PEI+AE' ? 1 : 0 });
+    a: Math.round(row.amount / row.months * (row.who === W[1] ? 1 : .5) * 100) / 100, x: [], e: row.tags.split(', ').indexOf('EST') >= 0 ? 1 : 0, h: row.who === W[2] ? 1 : 0 });
   const front = (arr, v, key) => [v].concat((arr || []).filter(x => (key ? key(x) : x) !== (key ? key(v) : v)));
   const card = cardList().find(c => c.name === row.card);
   if (card) data.cards = front(data.cards, card, c => c.name);
@@ -473,7 +482,7 @@ async function call(body) {
   return j;
 }
 function takeData(res) {
-  data = { cards: res.cards, cats: res.cats, tags: res.tags, catTags: res.catTags || {}, top: res.top || {}, ae: res.ae || [], totals: res.totals, now: res.now };
+  data = { cards: res.cards, cats: res.cats, tags: res.tags, catTags: res.catTags || {}, top: res.top || {}, ae: res.ae || [], totals: res.totals, now: res.now, names: res.names, sheet: res.sheet };
   queue.forEach(applyLocally);                // rows still waiting are not in the sheet yet
   store.set(DATA_KEY, data);
   if (!picked.card && data.cards.length) st.card = data.cards[0].name;
@@ -515,7 +524,7 @@ function drawAeMonth() {
   const H = 330 + 70 + cats.length * 76 + now.length * 88 + (now.length ? 0 : 100) + 130;
   const d = sheet(W, H);
   d.round(P, P, W - 2 * P, 230, 36, AE_COL.head);
-  d.text('AE  ·  ' + st.month, P + 50, P + 85, 40, '#FFFFFF', 400);
+  d.text(who3()[1] + '  ·  ' + st.month, P + 50, P + 85, 40, '#FFFFFF', 400);
   d.text(money(sum(now)), P + 50, P + 180, 86, '#FFFFFF', 500);
   let y = P + 230 + 90;
   d.text('รายการเดือนนี้', P, y, 32, grey, 400); y += 20;
@@ -558,7 +567,7 @@ function drawAeLater() {
   const H = P + 150 + 50 + (rows.length + 2) * RH + 90 + 60;
   const d = sheet(W, H);
   d.round(P, P, tw, 130, 30, AE_COL.head);
-  d.text('AE  ·  ยอดเดือนต่อไป  (' + label(months[0]) + ' – ' + label(months[months.length - 1]) + ')', P + 44, P + 80, 38, '#FFFFFF', 400);
+  d.text(who3()[1] + '  ·  ยอดเดือนต่อไป  (' + label(months[0]) + ' – ' + label(months[months.length - 1]) + ')', P + 44, P + 80, 38, '#FFFFFF', 400);
   d.text('รวม ' + money(grand), W - P - 44, P + 82, 44, '#FFFFFF', 500, 'right');
   let y = P + 130 + 40;
   const cx = j => P + NW + (j + 1) * mw - 18;
@@ -590,7 +599,7 @@ function toFile(c, name) {
   return { url, file: new File([bytes], name, { type: 'image/png' }) };
 }
 function shareAe() {
-  const pics = [[drawAeMonth(), 'AE-' + st.month + '.png'], [drawAeLater(), 'AE-' + st.month + '-next.png']].filter(x => x[0]).map(x => toFile(x[0], x[1]));
+  const pics = [[drawAeMonth(), who3()[1] + '-' + st.month + '.png'], [drawAeLater(), who3()[1] + '-' + st.month + '-next.png']].filter(x => x[0]).map(x => toFile(x[0], x[1]));
   shotFiles = pics.map(x => x.file);
   $('shotBox').innerHTML = pics.map(x => `<img src="${x.url}" alt="AE">`).join('');
   $('shot').classList.add('show'); $('shotBox').scrollTop = 0;
@@ -609,7 +618,7 @@ function swipe(el, fn) {
   el.addEventListener('touchmove', e => { if (el.id !== 'month') e.preventDefault(); }, { passive: false });
 }
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
-function drawAll() { drawMonth(); drawPickers(); drawCats(); drawTags(); drawAmount(); }
+function drawAll() { drawNames(); drawMonth(); drawPickers(); drawCats(); drawTags(); drawAmount(); }
 
 // iOS slides the page up for the keyboard and can leave it there; put it back when the keyboard goes
 // iOS home-screen app: the page can come out shorter than the screen, leaving a gap at the bottom
